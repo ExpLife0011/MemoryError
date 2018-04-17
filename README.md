@@ -1,6 +1,6 @@
 # MemoryError
 WorkInProgress.
-It's a hobby project for reading once popular mmo RuneScape client memory addresses.
+It's a hobby project for reading once popular mmo RuneScape client(NXT) memory addresses.
 
 It wouldn't be possible without those projects.
 BlackBone excellent haxing libary.
