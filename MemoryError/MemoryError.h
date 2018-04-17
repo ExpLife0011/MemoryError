@@ -57,6 +57,13 @@ struct WPOINT {
 	WORD x;
 	WORD y;
 };
+//for 4 edges, WORD size
+struct QWPOINT {
+	WORD bottom;
+	WORD left;
+	WORD right;
+	WORD top;
+};
 
 //for Npc focus//more stuff maybe added
 struct NPCFOCUS {
@@ -154,7 +161,7 @@ POINT TToScreen(POINT);
 POINT TToMap(POINT);
 VOID MouseCLRS(POINT, BOOLEAN);
 INT LocateStartAddresses();
-POINT TToScreen2(FFPOINT);
+WPOINT TToScreen2(FFPOINT);
 VOID RandomSleep();
 VOID RandomSleep2(DWORD,DWORD);
 BOOLEAN CheckAnim();

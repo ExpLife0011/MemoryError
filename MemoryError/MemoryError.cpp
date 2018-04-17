@@ -306,24 +306,16 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-
-
 // Get rs resolution, winapi
-FFPOINT GetRsResolution()
+QWPOINT GetRSCorners()
 {
-	FFPOINT point;
-	RECT desktop;
-	// Get a handle to the desktop window
-	//const HWND hDesktop = GetDesktopWindow();
-	// Get the size of screen to the variable desktop
-	//cout << hDesktop;
-	//cout << WProc;
-	GetWindowRect(WProcC, &desktop);
-	// The top left corner will have coordinates (0,0)
-	// and the bottom right corner will have coordinates
-	// (horizontal, vertical)
-	point.x= desktop.right - desktop.left;
-	point.y= desktop.bottom - desktop.top;
+	QWPOINT point;
+	RECT rs;
+	GetWindowRect(WProcC, &rs);
+	point.bottom = (WORD)rs.bottom;
+	point.left = (WORD)rs.left;
+	point.right = (WORD)rs.right;
+	point.top = (WORD)rs.top;
 	return point;
 }
 
@@ -331,48 +323,32 @@ FFPOINT GetRsResolution()
 WPOINT GetRsResolution2()
 {
 	WPOINT point;
-	RECT desktop;
-	// Get a handle to the desktop window
-	//const HWND hDesktop = GetDesktopWindow();
-	// Get the size of screen to the variable desktop
-	//cout << hDesktop;
-	//cout << WProc;
-	GetWindowRect(WProcC, &desktop);
-	// The top left corner will have coordinates (0,0)
-	// and the bottom right corner will have coordinates
-	// (horizontal, vertical)
-	point.x = desktop.right - desktop.left;
-	point.y = desktop.bottom - desktop.top;
+	QWPOINT rs=GetRSCorners();
+	point.x = rs.right - rs.left;
+	point.y = rs.bottom - rs.top;
 	return point;
 }
 
 // Get the mouse location on rs
-POINT GetMLoc()
+WPOINT GetMLoc()
 {
-	RECT desktop;
-	// Get a handle to the desktop window
-	//const HWND hDesktop = GetDesktopWindow();
-	// Get the size of screen to the variable desktop
-	//cout << hDesktop;
-	//cout << WProcC;
-	GetWindowRect(WProcC, &desktop);
-	// The top left corner will have coordinates (0,0)
-	// and the bottom right corner will have coordinates
-	// (horizontal, vertical)
+	RECT rs;
+	GetWindowRect(WProcC, &rs);
 	POINT point;
 	if (GetCursorPos(&point)) {
 
-		   INT x = point.x - desktop.left;
-		   INT y = point.y - desktop.top;
-		   if (x > 0 && y>0 && x < GetRsResolution().x && y < GetRsResolution().y) {
+		   INT x = point.x - rs.left;
+		   INT y = point.y - rs.top;
+		   if (x > 0 && y>0 && x < GetRsResolution2().x && y < GetRsResolution2().y) {
 			   point.x= x;
 			} else{ point.x = 0;}
-		   if (y > 0 && x>0 && y < GetRsResolution().y  && x < GetRsResolution().x) {
+		   if (y > 0 && x>0 && y < GetRsResolution2().y  && x < GetRsResolution2().x) {
 			   point.y = y;
 		   } else{ point.y = 0; }
 
 	}
-	return point;
+	//it should alwas be positive
+	return {(WORD)point.x,(WORD)point.y};
 }
 
 //Calculate to tile location
@@ -4138,10 +4114,10 @@ FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 }
 
 //tiles to client map
-POINT ToMapFFPOINT2(FFPOINT ItemCoord) {
+WPOINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 	FFPOINT pl = PlayerCoordFloatRaw();
 	FFPOINT center;
-	POINT endcalc;
+	WPOINT endcalc;
 	InterfaceComp p;
 
 	//cout << "find0" << "\n";
@@ -4163,7 +4139,7 @@ POINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 					FLOAT x = (p.xys.x / 2.f) + 8.f;
 					//titlebar
 					FLOAT y = (p.xys.y / 2.f) - 3.2f;
-					//cout <<"1: "<<dec<<GetRsResolution().y<<"\n";
+					//cout <<"1: "<<dec<<GetRsResolution2().y<<"\n";
 					//cout <<"2: "<< dec << GetRsResolution2().y<<"\n";
 					center = { x,y };
 				}
@@ -4176,12 +4152,14 @@ POINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 				FLOAT xx = (pl.x - ItemCoord.x);
 				FLOAT yy = (pl.y - ItemCoord.y);
 
-				endcalc.x = (center.x - xx* 0.0079f);
-				endcalc.y = (center.y + yy* 0.0079f);
+				endcalc.x = (WORD)(center.x - xx* 0.0079f);
+				endcalc.y = (WORD)(center.y + yy* 0.0079f);
 
-				GetWindowRect(WProcC, &rs);
+				QWPOINT rs = GetRSCorners();
+				endcalc.x= endcalc.x + rs.left;
+				endcalc.y= endcalc.y + rs.top;
 
-				return{ endcalc.x+ rs.left,endcalc.y+rs.top };
+				return{ endcalc.x, endcalc.y };
 			}
 		}
 	}
@@ -4208,14 +4186,14 @@ POINT ToMap(POINT spot) {
 		if (start.x == NULL && start.x == NULL) {
 			FLOAT x = (size.x / 2.f) + 12.f;
 			//titlebar
-			FLOAT y = (size.y / 2.f) + (GetRsResolution().y) - 6.f;
-			//cout <<"1: "<<dec<<GetRsResolution().y<<"\n";
+			FLOAT y = (size.y / 2.f) + (GetRsResolution2().y) - 6.f;
+			//cout <<"1: "<<dec<<GetRsResolution2().y<<"\n";
 			//cout <<"2: "<< dec << GetRsResolution2().y<<"\n";
 			center = { x,y };
 		}
 		else {
 			FLOAT x = (start.x + size.x / 2.f) + 12.f;
-			FLOAT y = (start.y + size.y / 2.f) + (GetRsResolution().y) - 6.f;
+			FLOAT y = (start.y + size.y / 2.f) + (GetRsResolution2().y) - 6.f;
 			center = { x,y };
 		}
 		FLOAT xx = pl.x - spot.x ;
@@ -5178,7 +5156,7 @@ VOID ReadGroundItemsArray2()
 	GIxmid2.clear();
 	GIymid2.clear();
 	GIText2.clear();
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 
 	INT limit = 0;
 	//1430//array start correction
@@ -5293,7 +5271,7 @@ BOOLEAN FindGItem_(vector<DWORD> item, BYTE maxdistance, INT corx, INT cory) {
 	GetWindowRect(WProcC, &rs);
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 
 	ReadGroundItemsArray2();
 
@@ -5886,7 +5864,7 @@ VOID ReadObjectsAArrays()
 	DWORD offxs = 0x80;
 	//ys
 	DWORD offys = 0x90;
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 	MEMss BlockA;
 
 	if (OB != NULL) {
@@ -5993,7 +5971,7 @@ VOID ReadDecorObj()
 	DWORD offxm = 0x88;
 	//ym
 	DWORD offym = 0x8c;
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 	MEMss BlockA;
 
 	if (DOB2 != NULL) {
@@ -6213,7 +6191,7 @@ VOID ReadProjectiles()
 	DWORD offxm = 0x88;
 	//ym
 	DWORD offym = 0x8c;
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 	MEMss BlockA;
 
 	if (PRO != NULL) {
@@ -6347,7 +6325,7 @@ VOID ReadCObjArrays()
 
 
 
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 	char crc32Arr[31];
 	BOOLEAN sw=false;
 	BOOLEAN sw2 = false;
@@ -6720,7 +6698,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 				if (min == MatchNPCsDist[i]) {
 					//cout << hex << MatchNPCsMBlock[i] << "\n";
 					if (MatchNPCsDist[i]<(6.f*512.f)) {
-						POINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
+						WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
 						if (screenp.x != 0 && screenp.y != 0) {                  //port
 							screenp.x = screenp.x - 7; screenp.y = screenp.y - 10-(5);
 							MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -6737,7 +6715,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 					}
 					else
 					{
-						POINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
+						WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
 						if (screenp.x != 0 && screenp.y != 0) {
 							screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 							MoveMouse(screenp.x, screenp.y, 4, 4);
@@ -6898,7 +6876,7 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, BYTE a
 	GetWindowRect(WProcC, &rs);
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 
 	//cout << "test";
 	//ReadDecorObj();
@@ -7093,7 +7071,7 @@ VOID ReadNPCArrayold(){
 	NPCxsize.clear();
 	NPCysize.clear();
 	MEMss BlockA;
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 
 
 
@@ -7267,7 +7245,7 @@ BOOLEAN FindNPCLock_(vector<DWORD> npc, BYTE maxdistance) {
 	GetWindowRect(WProcC, &rs);
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 
 	ReadCObjArrays();
 		//add all matching ids to separate array
@@ -7311,11 +7289,10 @@ BOOLEAN FindNPCLock_(vector<DWORD> npc, BYTE maxdistance) {
 	return FALSE;
 }
 
-
 //read only npc in focus// checks if valid
 NPCFOCUS ReadNPCInFocus_() {
 
-	WORD resy = GetRsResolution().y;
+	WORD resy = GetRsResolution2().y;
 
 	if (NPCLOCK !=NULL) {
 		
@@ -7359,7 +7336,6 @@ NPCFOCUS ReadNPCInFocus_() {
 	return{ { 0,0 },0,0,{ 0,0 },0 };
 }
 
-//
 //Clicks npc in focus 
 BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 
@@ -7373,7 +7349,7 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 	GetWindowRect(WProcC, &rs);
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 
 	GetCursorPos(&c);
 	//should delete if something is wrong
@@ -7401,7 +7377,7 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 			}
 			else
 			{
-				POINT screenp = ToMapFFPOINT2({ VirtPReadFloat(NPCLOCK + npcoff11) - 256.f,VirtPReadFloat(NPCLOCK + npcoff22) - 256.f });
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(NPCLOCK + npcoff11) - 256.f,VirtPReadFloat(NPCLOCK + npcoff22) - 256.f });
 				if (screenp.x != 0 && screenp.y != 0) {
 					screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 					MoveMouse(screenp.x, screenp.y, 4, 4);
@@ -7431,7 +7407,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
 	GetWindowRect(WProcC, &rs);
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 
 	GetCursorPos(&c);
 	Sleep(10);
@@ -7489,7 +7465,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
 						}
 						else
 						{
-							POINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
+							WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
 							if (screenp.x != 0 && screenp.y != 0) {
 								screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 								MoveMouse(screenp.x, screenp.y, 4, 4);
@@ -7557,7 +7533,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, DWORD health) {
 		if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
 			for (DWORD i = 0; i < MatchNPCsMBlock.size(); i++) {
 				if (min == MatchNPCsDist[i]) {
-					POINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
+					WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 7;
 						MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -7625,7 +7601,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,POINT spot) {
 			if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
 				for (DWORD i = 0; i < MatchNPCsMBlock.size(); i++) {
 					if (min == MatchNPCsDist[i]) {
-						POINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
+						WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
 						if (screenp.x != 0 && screenp.y != 0) {
 							screenp.x = screenp.x - 7; screenp.y = screenp.y - 7;
 							MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -7695,7 +7671,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, POINT spot, DWORD health)
 		if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
 			for (DWORD i = 0; i < MatchNPCsMBlock.size(); i++) {
 				if (min == MatchNPCsDist[i]) {
-					POINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
+					WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 7;
 						MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -7862,8 +7838,8 @@ FFPOINT TileToMouseTest222(FFPOINT ItemCoord)
 	FLOAT xx = ItemCoord.x;
 	FLOAT yy = ItemCoord.y;
 	FLOAT zz = ReadCoordZ() - ItemCoord.z;
-	FLOAT reshalfx = (GetRsResolution().x) *512.f / 2.f;
-	FLOAT reshalfy = (GetRsResolution().y) *512.f / 2.f;
+	FLOAT reshalfx = (GetRsResolution2().x) *512.f / 2.f;
+	FLOAT reshalfy = (GetRsResolution2().y) *512.f / 2.f;
 
 
 	FLOAT Realxx1=0;
@@ -7872,7 +7848,7 @@ FFPOINT TileToMouseTest222(FFPOINT ItemCoord)
 	FLOAT adj=0;
 	FLOAT adj2=0;
 	FLOAT curveloc=0;
-	FLOAT resy = GetRsResolution().y;
+	FLOAT resy = GetRsResolution2().y;
 
 ///////client size/resolutsion correction/////////////////////////////////////////////////////////////
 	//aiming 810 peak
@@ -7930,8 +7906,8 @@ FFPOINT TileToMouseTest22(FFPOINT ItemCoord)
 	FLOAT xx = ReadCoordX3() - ItemCoord.x;
 	FLOAT yy = ReadCoordY3() - ItemCoord.y;
 	FLOAT zz = ReadCoordZ() - ItemCoord.z;
-	FLOAT reshalfx = (GetRsResolution().x) *512.f / 2.f;
-	FLOAT reshalfy = (GetRsResolution().y) *512.f / 2.f;
+	FLOAT reshalfx = (GetRsResolution2().x) *512.f / 2.f;
+	FLOAT reshalfy = (GetRsResolution2().y) *512.f / 2.f;
 
 
 	FLOAT Realxx1 = 0;
@@ -7940,7 +7916,7 @@ FFPOINT TileToMouseTest22(FFPOINT ItemCoord)
 	FLOAT adj = 0;
 	FLOAT adj2 = 0;
 	FLOAT curveloc = 0;
-	FLOAT resy = GetRsResolution().y;
+	FLOAT resy = GetRsResolution2().y;
 
 	///////client size/resolutsion correction/////////////////////////////////////////////////////////////
 	//aiming 810 peak
@@ -7992,13 +7968,13 @@ FFPOINT TileToMouseTest22(FFPOINT ItemCoord)
 }
 
 //raw point
-POINT TileToMouseTest24(FFPOINT ItemCoord)
+WPOINT TileToMouseTest24(FFPOINT ItemCoord)
 {
 	FLOAT xx = ReadCoordX3() - ItemCoord.x;
 	FLOAT yy = ReadCoordY3() - ItemCoord.y;
 	FLOAT zz = ReadCoordZ() - ItemCoord.z;
-	FLOAT reshalfx = (GetRsResolution().x) *512.f / 2.f;
-	FLOAT reshalfy = (GetRsResolution().y) *512.f / 2.f;
+	FLOAT reshalfx = (GetRsResolution2().x) *512.f / 2.f;
+	FLOAT reshalfy = (GetRsResolution2().y) *512.f / 2.f;
 
 
 	FLOAT Realxx1 = 0;
@@ -8007,7 +7983,7 @@ POINT TileToMouseTest24(FFPOINT ItemCoord)
 	FLOAT adj = 0;
 	FLOAT adj2 = 0;
 	FLOAT curveloc = 0;
-	FLOAT resy = GetRsResolution().y;
+	FLOAT resy = GetRsResolution2().y;
 
 	///////client size/resolutsion correction/////////////////////////////////////////////////////////////
 	//aiming 810 peak
@@ -8023,6 +7999,7 @@ POINT TileToMouseTest24(FFPOINT ItemCoord)
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//if anyone wonders where those numbers came for adjustments, trial and error like all of this project
 
 	//height compress for y
 	FLOAT	fish2y = (yy / 860.f);
@@ -8053,7 +8030,7 @@ POINT TileToMouseTest24(FFPOINT ItemCoord)
 	}
 
 	GetWindowRect(WProcC, &rs);
-	POINT p;
+	WPOINT p;
 	p.x = rs.left + Realxx1/512.f;
 	p.y = rs.top + Realyy2/512.f;
 	if (p.x<3842 && p.y<2162) { return p; }
@@ -8067,13 +8044,13 @@ POINT TileToMouseTest23(POINT ItemCoord)
 {
 	FLOAT xx = ReadCoordX3()/512.f - ItemCoord.x;
 	FLOAT yy = ReadCoordY3()/512.f - ItemCoord.y;
-	FLOAT reshalfx = (GetRsResolution().y) / 2.f;
-	FLOAT reshalfy = (GetRsResolution().x) / 2.f;
+	FLOAT reshalfx = (GetRsResolution2().y) / 2.f;
+	FLOAT reshalfy = (GetRsResolution2().x) / 2.f;
 
 	FLOAT yy2;
 	FLOAT Realxx1;
 	FLOAT Realyy2;
-	FLOAT res = (GetRsResolution().y) - 540.f;
+	FLOAT res = (GetRsResolution2().y) - 540.f;
 	FFPOINT point;
 	RECT desktop;
 	const HWND hDesktop = GetDesktopWindow();
@@ -8160,8 +8137,8 @@ POINT MouseToTile(POINT Mousecoords)
 {
 	POINT point;
 	//lets imagine that 1step is 40 pixels
-	INT xx = (Mousecoords.x- GetRsResolution().x / 2) / 40;
-	INT	yy = (GetRsResolution().y / 2 - Mousecoords.y) / 40;
+	INT xx = (Mousecoords.x- GetRsResolution2().x / 2) / 40;
+	INT	yy = (GetRsResolution2().y / 2 - Mousecoords.y) / 40;
 	INT xx1 = xx + CRL(MyLocXRaw);
 	INT	yy2 = yy + CRL(MyLocYRaw);
 
@@ -8464,7 +8441,7 @@ POINT TToScreen(POINT spot) {
 }
 
 //Tile to screen pixels
-POINT TToScreen2(FFPOINT spot) {
+WPOINT TToScreen2(FFPOINT spot) {
 
 	if (spot.x != NULL && spot.y != NULL)
 	{
@@ -8502,7 +8479,7 @@ FFPOINT InvFindItem(DWORD item) {
 BOOLEAN ClickInv_(DWORD item) {
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution().y;
+	WORD resyy = GetRsResolution2().y;
 	POINT c, c2;
 	GetCursorPos(&c);
 	RandomSleep();
@@ -8543,7 +8520,7 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 				FFPOINT tile512 = { tile.x*512.f,tile.y*512.f };
 				FLOAT dist = sqrt(pow(tile512.x - p.x, 2) + pow(tile512.y - p.y, 2));
 				if (dist < (6.f*512.f)) {
-					POINT screenp = TToScreen2({ tile512.x, tile512.y });
+					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
 						MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -8560,7 +8537,7 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 				}
 				else
 				{
-					POINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
+					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 						MoveMouse(screenp.x, screenp.y, 4, 4);
@@ -8578,7 +8555,7 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 				FFPOINT tile512 = { tile.x*512.f,tile.y*512.f };
 				FLOAT dist = sqrt(pow(tile512.x - p.x, 2) + pow(tile512.y - p.y, 2));
 				if (dist < (6.f*512.f)) {
-					POINT screenp = TToScreen2({ tile512.x, tile512.y });
+					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0 && minimap == 1) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
 						MoveMouse(screenp.x, screenp.y, 14, 20);
@@ -8595,7 +8572,7 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 				}
 				else
 				{
-					POINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
+					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0 && minimap == 2) {
 						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 						MoveMouse(screenp.x, screenp.y, 4, 4);
@@ -8862,7 +8839,7 @@ POINT MousePos_() {
 	//GetWindowRect(WProcC, &rs);
 	//WORD resyt = rs.top;
 	//WORD resxl = rs.left;
-	//WORD resyy = GetRsResolution().y;
+	//WORD resyy = GetRsResolution2().y;
 
 	POINT p;
 	GetCursorPos(&p);	
@@ -10369,14 +10346,11 @@ int StartGraphicOverlay()
 				else { if (key13 == FALSE) { key13 = TRUE; Sleep(200); } }
 			}
 			if (!key13) {
-				//mouse
-				POINT pp;
-				GetCursorPos(&pp);
 				//cout<<(int)CheckRS3()<<endl;
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 40.f), ImColor(0, 255, 255, 255), "MXY:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(40.f, 40.f), ImColor(0, 255, 0, 255), to_string(pp.x- rs3.left).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(40.f, 40.f), ImColor(0, 255, 0, 255), to_string(GetMLoc().x).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 40.f), ImColor(0, 255, 255, 255), ":", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(80.f,40.f), ImColor(0, 255, 0, 255), to_string(pp.y- rs3.top).c_str(),0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(80.f, 40.f), ImColor(0, 255, 0, 255), to_string(GetMLoc().y).c_str(), 0, 0.0f, 0);
 				//debug rs rev
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 50.f), ImColor(0, 255, 255, 255), "MD5:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(40.f, 50.f), ImColor(0, 255, 0, 255), MD5hash.c_str(), 0, 0.0f, 0);
@@ -10397,9 +10371,9 @@ int StartGraphicOverlay()
 				//debug rs X,Y window resulution
 
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 110.f), ImColor(0, 255, 255, 255), "RsXres:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 110.f), ImColor(0, 255, 0, 255), to_string(GetRsResolution().x).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 110.f), ImColor(0, 255, 0, 255), to_string(GetRsResolution2().x).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 120.f), ImColor(0, 255, 255, 255), "RsYres:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 120.f), ImColor(0, 255, 0, 255), to_string(GetRsResolution().y).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 120.f), ImColor(0, 255, 0, 255), to_string(GetRsResolution2().y).c_str(), 0, 0.0f, 0);
 				//debug Angle
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 130.f), ImColor(0, 255, 255, 255), "Angle1:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 130.f), ImColor(0, 255, 0, 255), to_string(ReadCompass().x).c_str(), 0, 0.0f, 0);
@@ -12861,6 +12835,4 @@ VOID LoadClueScrolls() {
 	CNR.push_back(41800); CText.push_back("Lockbox2"); CCoord.push_back({ 0,0 });
 
 	
-
-
 }
