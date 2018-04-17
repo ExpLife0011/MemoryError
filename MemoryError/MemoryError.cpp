@@ -6699,8 +6699,8 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 					//cout << hex << MatchNPCsMBlock[i] << "\n";
 					if (MatchNPCsDist[i]<(6.f*512.f)) {
 						WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
-						if (screenp.x != 0 && screenp.y != 0) {                  //port
-							screenp.x = screenp.x - 7; screenp.y = screenp.y - 10-(5);
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7; screenp.y = screenp.y -7;
 							MoveMouse(screenp.x, screenp.y, 14, 20);
 							//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 							RandomSleep2(200, 2000);
@@ -7360,9 +7360,11 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 		if (NPCLOCK != NULL) {
 			FLOAT dist = sqrt(pow(NPCLOCK - p.x, 2) + pow(NPCLOCK - p.y, 2));
 			if (dist < (6.f*512.f)) {
-				POINT screenp = { VirtPReadWord(NPCLOCK + npcoffxm) + resxl,resyy - VirtPReadWord(NPCLOCK + npcoffym) + resyt };
-				if (screenp.x != 0 && screenp.y != 0) {
-					screenp.x = screenp.x - 7; screenp.y = screenp.y - 7;
+				WPOINT screenp = { VirtPReadWord(NPCLOCK + npcoffxm),VirtPReadWord(NPCLOCK + npcoffym)};
+				screenp.y = resyy - screenp.y;
+				if (ScreenFilter(screenp)) {
+					screenp.x = screenp.x - 7 + resxl;
+					screenp.y = screenp.y - 7 + resyt;
 					MoveMouse(screenp.x, screenp.y, 14, 20);
 					hover = VirtPReadDword(NPCLOCK + npcoff111);
 					RandomSleep2(100, 200);
@@ -7448,9 +7450,11 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
 				for (DWORD i = 0; i < MatchNPCsMBlock.size();i++) {
 					if (min == MatchNPCsDist[i]) {
 						if (MatchNPCsDist[i]<(6.f*512.f)) {						
-							POINT screenp ={ VirtPReadWord(MatchNPCsMBlock[i] + npcoffxm) + resxl,resyy - VirtPReadWord(MatchNPCsMBlock[i] + npcoffym) + resyt };
-							if (screenp.x != 0 && screenp.y != 0) {
-								screenp.x = screenp.x - 7+corx; screenp.y = screenp.y - 7+cory;
+							WPOINT screenp ={ VirtPReadWord(MatchNPCsMBlock[i] + npcoffxm),VirtPReadWord(MatchNPCsMBlock[i] + npcoffym) };
+							screenp.y = resyy - screenp.y;
+							if (ScreenFilter(screenp)) {
+								screenp.x = screenp.x - 7 + corx + resxl;
+								screenp.y = screenp.y - 7 + cory + resyt;
 								MoveMouse(screenp.x, screenp.y, 14, 20);
 								hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 								RandomSleep2(100, 200);
