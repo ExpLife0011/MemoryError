@@ -169,7 +169,7 @@ FFPOINT ResComp2;
 string Revision;
 FFPOINT EliteResult;
 DWORD64 HP;
-vector<DWORD64> VarBits1;
+vector<DWORD64> VarBits1, VarBits2;
 DWORD64 PP;
 DWORD64 AD;
 DWORD64 SL;
@@ -3444,18 +3444,28 @@ vector<DWORD64> RefPraypoints()
 	return results2;
 }
 
-//Tryes to find varbits chunks
-vector<DWORD64> RefVarBits1()
+//Tryes to find varpbits chunks
+VOID RefVarpBits1()
 {
-
+	VarBits1.clear();
+	VarBits2.clear();
 	vector<DWORD64> results;
-	vector<DWORD64> results2;
-	vector<DWORD> results2id;
-	vector<DWORD64> results2base;
-	vector<DWORD64> results3;
-	vector<DWORD> results3id;
-	vector<DWORD64> results3base;
-	vector<DWORD64> results3basead;
+	//1
+	vector<DWORD64> results21;
+	vector<DWORD> results2id1;
+	vector<DWORD64> results2base1;
+	vector<DWORD64> results31;
+	vector<DWORD> results3id1;
+	vector<DWORD64> results3base1;
+	vector<DWORD64> results3basead1;
+	//2
+	vector<DWORD64> results22;
+	vector<DWORD> results2id2;
+	vector<DWORD64> results2base2;
+	vector<DWORD64> results32;
+	vector<DWORD> results3id2;
+	vector<DWORD64> results3base2;
+	vector<DWORD64> results3basead2;
 	BOOLEAN Found = FALSE;
 	//FFFFFFFFFFFFFFFFFFFFFFFF
 	DWORD64 byte1 = 0xFFFFFFFFFFFFFFFF;
@@ -3471,7 +3481,7 @@ vector<DWORD64> RefVarBits1()
 
 
 	cout << "Lookin for varbits \n";
-	if (!procIDs.empty())
+	if (CheckRS3)
 	{
 		DWORD64 ScanPlaceHolder = ScAdd1;
 		DWORD64 ScanStart;
@@ -3490,76 +3500,83 @@ vector<DWORD64> RefVarBits1()
 			for (DWORD i = 0; i < results.size(); i++) {
 
 			    BYTE bb1 = VirtPReadByte(results[i] - 0x21);
-			   //thers seems to be double 64 and 32 bit
+			   //thers seems to be double 64 and 32 bit?
 				//DWORD64 bb2 = VirtPRead64(results[i] - 0x20);
 				//DWORD bb3 = VirtPReadDword(results[i] + 0x24);
 				//ea check 58 and 80
+				//bools?
+				//stats?
 				DWORD64 ea1 = VirtPRead64(results[i] - 0x58);
 				DWORD64 ea2 = VirtPRead64(results[i] + 0x58);
 				DWORD64 ea3 = VirtPRead64(results[i] - 0xb0);
 				DWORD64 ea4 = VirtPRead64(results[i] + 0xb0);
+				DWORD64 ea5 = VirtPRead64(results[i] - 0x108);
+				DWORD64 ea6 = VirtPRead64(results[i] + 0x108);
+				DWORD64 ea7 = VirtPRead64(results[i] - 0x160);
+				DWORD64 ea8 = VirtPRead64(results[i] + 0x160);
 
-				//bool?
+				//80 size//1
 				if (
 				    bb1 == 0x91
 					//&&
 					//bb2 == 1
 					) {				
-					results2.push_back(results[i]);
+					results21.push_back(results[i]);
 					DWORD id = VirtPReadDword(results[i] - 0x10);
-					results2id.push_back(id);
-					results2base.push_back(DeterMemoryBlockLenght(results[i]).start);
+					results2id1.push_back(id);
+					results2base1.push_back(DeterMemoryBlockLenght(results[i]).start);
 				}
-				//stat?
+				//58 size//2
 				if (
-					 ea1== byte2 
+					 ea1 == byte2 
 					 && ea2 == byte2 
-					//&& ea3 == byte2 && ea4 == byte2
+					 && ea3 == byte2 && ea4 == byte2
+					 && ea5 == byte2 && ea6 == byte2
+					 && ea7 == byte2 && ea8 == byte2
 					) {
-					results2.push_back(results[i]);
+					results22.push_back(results[i]);
 					DWORD id = VirtPReadDword(results[i] - 0x10);
-					results2id.push_back(id);
-					results2base.push_back(DeterMemoryBlockLenght(results[i]).start);
+					results2id2.push_back(id);
+					results2base2.push_back(DeterMemoryBlockLenght(results[i]).start);
 				}
 			}
 
-			//smallest number to up
-		
-			if (debug) { cout << "varbits: " << dec << results2id.size() << "\n"; }
-			if (!results2id.empty()) {
+			//1
+			//smallest number to up		
+			if (debug) { cout << "varbits1: " << dec << results2id1.size() << "\n"; }
+			if (!results2id1.empty()) {
 				for (DWORD i = 10; i < 9000; i++) {
-					for (DWORD ii = 0; ii < results2id.size(); ii++) {
-						if (results2id[ii] == i) {
-							results3.push_back(results2[ii]);
-							results3id.push_back(results2id[ii]);
+					for (DWORD ii = 0; ii < results2id1.size(); ii++) {
+						if (results2id1[ii] == i) {
+							results31.push_back(results21[ii]);
+							results3id1.push_back(results2id1[ii]);
 						}}}}
 
-			
-			if (!results2base.empty()) {
-				results3base.push_back(55999);
-				results3basead.push_back(55999);
-				for (DWORD i = 0; i < results2base.size(); i++) {
+			//compares if found value is in same chunk
+			if (!results2base1.empty()) {
+				results3base1.push_back(55999);
+				results3basead1.push_back(55999);
+				for (DWORD i = 0; i < results2base1.size(); i++) {
 					Found = FALSE;
-		        	for (DWORD ii = 0; ii < results3base.size(); ii++) {
-						if (results2base[i] == results3base[ii]) { Found = TRUE; break; }
+		        	for (DWORD ii = 0; ii < results3base1.size(); ii++) {
+						if (results2base1[i] == results3base1[ii]) { Found = TRUE; break; }
 				}
-					if (Found == FALSE) { results3basead.push_back(results2[i]); }
-					if (Found ==FALSE) { results3base.push_back(results2base[i]); }
+					if (Found == FALSE) { results3basead1.push_back(results21[i]); }
+					if (Found ==FALSE) { results3base1.push_back(results2base1[i]); }
 				}}
 
 
 
-			if (!results3base.empty()) {
-				if (debug) { cout << "varbitsb: " << dec << results3base.size() << "\n"; }
-				for (DWORD i = 0; i < results3base.size(); i++) {
-					cout << "base: " << hex << results3base[i] <<" : "<< "1staddr: "<< results3basead[i] << "\n";
-
+			if (!results3base1.empty()) {
+				if (debug) { cout << "varbitsb1: " << dec << results3base1.size() << "\n"; }
+				for (DWORD i = 0; i < results3base1.size(); i++) {
+					cout << "base1: " << hex << results3base1[i] <<" : "<< "1staddr1: "<< results3basead1[i] << "\n";
 				}
 			}
 
-			if (!results3.empty()) {
-				if (debug) { cout << "varbits2: " << dec << results3.size() << "\n"; }
-				for (DWORD i = 0; i < results3.size(); i++) {	
+			if (!results31.empty()) {
+				if (debug) { cout << "varbits21: " << dec << results31.size() << "\n"; }
+				for (DWORD i = 0; i < results31.size(); i++) {	
 					//if (VirtPReadDword(results3[i] - 0x10) == 1581) { cout << "1581" << " : " << hex << results3[i]<<endl; }
 					//if (VirtPReadDword(results3[i] - 0x10) == 1582) { cout << "1582" << " : " << hex << results3[i] << endl; }
 				     // cout << "Id: " << dec << results3id[i] <<" : "<<hex<< results3[i] << "\n";
@@ -3567,13 +3584,62 @@ vector<DWORD64> RefVarBits1()
 					
 					//BlockA = DeterMemoryBlockLenght(results3[i]);
 					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
-				}				
-				//HP = results3[0];
-				return results3basead;
+				}					
+				VarBits1 = results3basead1;
+			}
+
+			//2
+			//smallest number to up		
+			if (debug) { cout << "varbits2: " << dec << results2id2.size() << "\n"; }
+			if (!results2id2.empty()) {
+				for (DWORD i = 10; i < 9000; i++) {
+					for (DWORD ii = 0; ii < results2id2.size(); ii++) {
+						if (results2id2[ii] == i) {
+							results32.push_back(results22[ii]);
+							results3id2.push_back(results2id2[ii]);
+						}
+					}
+				}
+			}
+
+			//compares if found value is in same chunk
+			if (!results2base2.empty()) {
+				results3base2.push_back(55999);
+				results3basead2.push_back(55999);
+				for (DWORD i = 0; i < results2base2.size(); i++) {
+					Found = FALSE;
+					for (DWORD ii = 0; ii < results3base2.size(); ii++) {
+						if (results2base2[i] == results3base2[ii]) { Found = TRUE; break; }
+					}
+					if (Found == FALSE) { results3basead2.push_back(results22[i]); }
+					if (Found == FALSE) { results3base2.push_back(results2base2[i]); }
+				}
+			}
+
+
+
+			if (!results3base2.empty()) {
+				if (debug) { cout << "varbitsb2: " << dec << results3base2.size() << "\n"; }
+				for (DWORD i = 0; i < results3base2.size(); i++) {
+					cout << "base2: " << hex << results3base2[i] << " : " << "1staddr2: " << results3basead2[i] << "\n";
+				}
+			}
+
+			if (!results32.empty()) {
+				if (debug) { cout << "varbits22: " << dec << results32.size() << "\n"; }
+				for (DWORD i = 0; i < results32.size(); i++) {
+					//if (VirtPReadDword(results3[i] - 0x10) == 1581) { cout << "1581" << " : " << hex << results3[i]<<endl; }
+					//if (VirtPReadDword(results3[i] - 0x10) == 1582) { cout << "1582" << " : " << hex << results3[i] << endl; }
+					// cout << "Id: " << dec << results3id[i] <<" : "<<hex<< results3[i] << "\n";
+					//cout << "foundhp: " << hex << results3[i] << "\n";
+
+					//BlockA = DeterMemoryBlockLenght(results3[i]);
+					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
+				}
+				VarBits2 = results3basead2;
 			}
 		}
 	}
-	return results3basead;
 }
 
 //interf test, returns matched memory spot
@@ -6032,34 +6098,32 @@ VOID ReadDecorObj()
 						}}}}}
 
 
-//settings test
+//settings test reads//varpbits
 VOID SettingTest()
 {
 	SettingsAddr.clear();
 	SettingsId.clear();
 	SettingsState.clear();
 
-	static INT limit = 2000;
+	WORD limit = 2000;
 
 	//dif//step
-	static DWORD off2 = 0x80;
+	DWORD off1 = 0x80;
+	DWORD off2 = 0x58;
 	DWORD offh = 0;
 
 	MEMss BlockA;
 
 	if (!VarBits1.empty()) {
-
-
-
 		for (DWORD i = 0; i < VarBits1.size(); i++) {
 			offh = 0;
-			DWORD64 Sc = VarBits1[i] - off2*(limit / 2);
+			DWORD64 Sc = VarBits1[i] - off1*(limit / 2);
 			for (DWORD ii = 0; ii < limit; ii++) {
-				offh = offh + off2;
-				BYTE v1 = VirtPReadByte(Sc + offh - 0x21);
-				DWORD64 v2 = VirtPRead64(Sc + offh);
+				offh = offh + off1;
+				DWORD64 Hold = Sc + offh;
+				//BYTE v1 = VirtPReadByte(Hold - 0x21);
+				DWORD64 v2 = VirtPRead64(Hold);
 				//DWORD64 v3 = VirtPRead64(Sc + offh - 0x20);
-
 				if (
 					//v1 == 0x91
 					//&&
@@ -6067,11 +6131,11 @@ VOID SettingTest()
 				//	&&
 					//v3 == 1
 					) {
-					DWORD64 id = VirtPReadWord(Sc + offh - 0x10);
+					DWORD64 id = VirtPReadWord(Hold - 0x10);
 					if (id > 10) {
-						SettingsAddr.push_back(Sc + offh);
+						SettingsAddr.push_back(Hold);
 						SettingsId.push_back(id);
-						DWORD state = VirtPReadDword(Sc + offh + 0x20);
+						DWORD state = VirtPReadDword(Hold + 0x20);
 						SettingsState.push_back(state);
 					}
 
@@ -6079,6 +6143,38 @@ VOID SettingTest()
 			}
 		}
 	}
+
+	if (!VarBits2.empty()) {
+		for (DWORD i = 0; i < VarBits2.size(); i++) {
+			offh = 0;
+			DWORD64 Sc = VarBits2[i] - off2*(limit / 2);
+			for (DWORD ii = 0; ii < limit; ii++) {
+				offh = offh + off2;
+				DWORD64 Hold = Sc + offh;
+				//BYTE v1 = VirtPReadByte(Hold - 0x21);
+				DWORD64 v2 = VirtPRead64(Hold);
+				//DWORD64 v3 = VirtPRead64(Sc + offh - 0x20);
+				if (
+					//v1 == 0x91
+					//&&
+					v2 == 0x3ea
+					//	&&
+					//v3 == 1
+					) {
+					DWORD64 id = VirtPReadWord(Hold - 0x10);
+					if (id > 10) {
+						SettingsAddr.push_back(Hold);
+						SettingsId.push_back(id);
+						DWORD state = VirtPReadDword(Hold + 0x20);
+						SettingsState.push_back(state);
+					}
+
+				}
+			}
+		}
+	}
+
+
 }
 
 
@@ -8033,7 +8129,7 @@ WPOINT TileToMouseTest24(FFPOINT ItemCoord)
 		Realxx1 = Realxx1 + xx*(zz / 256.f);
 	}
 
-	GetWindowRect(WProcC, &rs);
+	QWPOINT rs=GetRSCorners();
 	WPOINT p;
 	p.x = rs.left + Realxx1/512.f;
 	p.y = rs.top + Realyy2/512.f;
@@ -9098,7 +9194,7 @@ VOID LSA1() {
 		
 		if (SL == NULL || HP==NULL || R5 == 1) {
 			R5 = 0;
-			VarBits1 = RefVarBits1();
+			 RefVarpBits1();
 			//SL=RefSlrepoints()[0];
 		}
 		/*
@@ -10428,7 +10524,7 @@ int StartGraphicOverlay()
 			}
 
 
-			//Script for telos
+			//
 			if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_DELETE)) {
 				NPCLOCK = NULL;
 			}
@@ -10437,80 +10533,7 @@ int StartGraphicOverlay()
 				else { if (key25 == FALSE) { key25 = TRUE; Sleep(200); } }
 			}
 			if (key25) {
-				//pray// 12 melee,13 magic, 14 range
-				//telos takes a hit 28928
-				DWORD melee = 28929;//melee prot
-				DWORD magic = 28959;// magic prot
-				DWORD strattack = 28938;//melle protect possibly or resonance
-				DWORD bindattack = 28931;// deal over 9000 damage
-				DWORD holdstill = 28935;// freedom+surge
-				if (NPCLOCK == NULL) {
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(500, 300), ImColor(0, 255, 0, 255), "Lost", 0, 0.0f, 0);
-					FindNPCLock_({ 22891,22908 }, 30);
-				} 
-				else {
-					NPCFOCUS p = ReadNPCInFocus_();
-					ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(p.xym.x, p.xym.y), ImColor(0, 255, 0, 255), "L", 0, 0.0f, 0);
-
-					if (p.ID == 22891) {
-						if (p.AnimState != 28963 || p.AnimState != 28964) {
-							if (p.AnimState == melee) {
-								if (ReadPlayerPrayT() != 12) {
-									KeyPress_('p');
-									Sleep(450 + RandomGener2(600));
-								}
-							}
-							if (p.AnimState == magic) {
-								if (ReadPlayerPrayT() != 13) {
-									KeyPress_('o');
-									Sleep(450 + RandomGener2(600));
-								}
-							}
-							if (p.AnimState == strattack) {
-								if (ReadPlayerPrayT() != 12) { KeyPress_('p'); }
-								if (InvItemcount_(36533) > 0) {
-									Sleep(350 + RandomGener2(400));
-									KeyPress_('k');
-									Sleep(350 + RandomGener2(400));
-									KeyPress_('l');
-									Sleep(3000 + RandomGener2(2000));
-									if (InvItemcount_(36713) > 0) {
-										KeyPress_('j');
-									}
-								}
-							}
-							if (p.AnimState == holdstill) {
-								KeyPress_('i');
-								Sleep(1100 + RandomGener2(500));
-								KeyPress_('u');
-								Sleep(5300 + RandomGener2(500));
-
-							}
-							if (InvItemcount_(22370) > 0) {
-								if (!FindNPCBool({ 20458 }, 30)) {
-									KeyPress_('h');
-									Sleep(450 + RandomGener2(400));
-								}
-							}
-						}
-					}
-					if (p.ID == 22908) {
-						if (p.AnimState != 28957) {
-							if (ReadPlayerPrayT() != 13) {
-								KeyPress_('o');
-								Sleep(450 + RandomGener2(600));
-							}
-
-							if (InvItemcount_(22370) > 0) {
-								if (!FindNPCBool({ 20458 }, 30)) {
-									KeyPress_('h');
-									Sleep(550 + RandomGener2(800));
-								}
-							}
-						}
-					}
-
-				}
+			
 			}
 
 			//invbox spots

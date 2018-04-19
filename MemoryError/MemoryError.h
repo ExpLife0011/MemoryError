@@ -124,6 +124,7 @@ static const char*  GetDefault2CompressedFontDataTTFBase85();
 
 extern HINSTANCE hInstance2;
 BOOLEAN Start(BOOLEAN, BOOLEAN);
+BOOLEAN CheckRS3();
 VOID Cpuinit();
 VOID LoadItemText();
 VOID LoadClueScrolls();
