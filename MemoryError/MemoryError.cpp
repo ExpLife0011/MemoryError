@@ -3247,7 +3247,6 @@ vector<DWORD64> ScanInvB(PatternSearch patern, char* TextToSay, vector<DWORD> of
 	return results2;
 }
 
-
 //Gets interface address slay, ads them to gobal to use as refrence
 vector<DWORD64> RefSlrepoints()
 {
@@ -3506,20 +3505,37 @@ VOID RefVarpBits1()
 				//ea check 58 and 80
 				//bools?
 				//stats?
-				DWORD64 ea1 = VirtPRead64(results[i] - 0x58);
-				DWORD64 ea2 = VirtPRead64(results[i] + 0x58);
-				DWORD64 ea3 = VirtPRead64(results[i] - 0xb0);
-				DWORD64 ea4 = VirtPRead64(results[i] + 0xb0);
-				DWORD64 ea5 = VirtPRead64(results[i] - 0x108);
-				DWORD64 ea6 = VirtPRead64(results[i] + 0x108);
-				DWORD64 ea7 = VirtPRead64(results[i] - 0x160);
-				DWORD64 ea8 = VirtPRead64(results[i] + 0x160);
+				DWORD64 ea11 = VirtPRead64(results[i] - 0x80);
+				DWORD64 ea21 = VirtPRead64(results[i] + 0x80);
+				DWORD64 ea31 = VirtPRead64(results[i] - 0x100);
+				DWORD64 ea41 = VirtPRead64(results[i] + 0x100);
+				DWORD64 ea51 = VirtPRead64(results[i] - 0x180);
+				DWORD64 ea61 = VirtPRead64(results[i] + 0x180);
+				DWORD64 ea71 = VirtPRead64(results[i] - 0x200);
+				DWORD64 ea81 = VirtPRead64(results[i] + 0x200);
+				DWORD64 ea91 = VirtPRead64(results[i] - 0x280);
+				DWORD64 ea101 = VirtPRead64(results[i] + 0x280);
+
+				DWORD64 ea12 = VirtPRead64(results[i] - 0x58);
+				DWORD64 ea22 = VirtPRead64(results[i] + 0x58);
+				DWORD64 ea32 = VirtPRead64(results[i] - 0xb0);
+				DWORD64 ea42 = VirtPRead64(results[i] + 0xb0);
+				DWORD64 ea52 = VirtPRead64(results[i] - 0x108);
+				DWORD64 ea62 = VirtPRead64(results[i] + 0x108);
+				DWORD64 ea72 = VirtPRead64(results[i] - 0x160);
+				DWORD64 ea82 = VirtPRead64(results[i] + 0x160);
+				DWORD64 ea92 = VirtPRead64(results[i] - 0x160);
+				DWORD64 ea102 = VirtPRead64(results[i] + 0x160);
 
 				//80 size//1
 				if (
 				    bb1 == 0x91
-					//&&
-					//bb2 == 1
+					&& ea11 == byte2
+					&& ea21 == byte2
+					&& ea31 == byte2 && ea41 == byte2
+					&& ea51 == byte2 && ea61 == byte2
+					&& ea71 == byte2 && ea81 == byte2
+					&& ea91 == byte2 && ea101 == byte2
 					) {				
 					results21.push_back(results[i]);
 					DWORD id = VirtPReadDword(results[i] - 0x10);
@@ -3528,11 +3544,12 @@ VOID RefVarpBits1()
 				}
 				//58 size//2
 				if (
-					 ea1 == byte2 
-					 && ea2 == byte2 
-					 && ea3 == byte2 && ea4 == byte2
-					 && ea5 == byte2 && ea6 == byte2
-					 && ea7 == byte2 && ea8 == byte2
+					 ea12 == byte2 
+					 && ea22 == byte2 
+					 && ea32 == byte2 && ea42 == byte2
+					 && ea52 == byte2 && ea62 == byte2
+					 && ea72 == byte2 && ea82 == byte2
+					 && ea92 == byte2 && ea102 == byte2
 					) {
 					results22.push_back(results[i]);
 					DWORD id = VirtPReadDword(results[i] - 0x10);
@@ -3584,7 +3601,9 @@ VOID RefVarpBits1()
 					
 					//BlockA = DeterMemoryBlockLenght(results3[i]);
 					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
-				}					
+				}		
+				//delete
+				results3basead1.erase(results3basead1.begin());
 				VarBits1 = results3basead1;
 			}
 
@@ -3636,6 +3655,7 @@ VOID RefVarpBits1()
 					//BlockA = DeterMemoryBlockLenght(results3[i]);
 					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
 				}
+				results3basead2.erase(results3basead2.begin());
 				VarBits2 = results3basead2;
 			}
 		}
@@ -6114,6 +6134,7 @@ VOID SettingTest()
 
 	MEMss BlockA;
 
+	//cout << VarBits1.size() << endl;
 	if (!VarBits1.empty()) {
 		for (DWORD i = 0; i < VarBits1.size(); i++) {
 			offh = 0;
@@ -6144,6 +6165,7 @@ VOID SettingTest()
 		}
 	}
 
+	//cout << VarBits2.size() << endl;
 	if (!VarBits2.empty()) {
 		for (DWORD i = 0; i < VarBits2.size(); i++) {
 			offh = 0;
@@ -6168,7 +6190,6 @@ VOID SettingTest()
 						DWORD state = VirtPReadDword(Hold + 0x20);
 						SettingsState.push_back(state);
 					}
-
 				}
 			}
 		}
@@ -9178,7 +9199,7 @@ VOID LSA1() {
 		if (ScAdd9 == NULL || R4 == 1) {
 			R4 = 0;
 			cout << "Lookin for revision" << "\n";
-			DWORD64 ScanPlaceHolder = LocalPlayer;
+			DWORD64 ScanPlaceHolder = ScAdd1;
 			DWORD64 ScanStart;
 			DWORD64 ScanEnd;
 			if (ScanBack > ScanPlaceHolder) { ScanStart = 500000; }
@@ -10713,9 +10734,11 @@ int StartGraphicOverlay()
 			}
 			if (key27) {
 				SettingTest();
-				cout << dec << SettingsId.size() << endl;
+				//cout << dec << SettingsId.size() << endl;
 
 				for (DWORD i = 0; i < SettingsId.size(); i++) {
+					//random junk filter
+					if (SettingsId[i]!=3913 && SettingsId[i] != 3914 && SettingsId[i] != 3915)
 					//for all ids range
 					//cout << "id:" << dec << SettingsId[i] << endl;
 					//key4 = FALSE;

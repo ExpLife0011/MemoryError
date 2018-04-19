@@ -14,24 +14,24 @@ char* PascalExports[] =
 	(char*)"FindGroundItems", (char*)"Function FindGroundItems(Gitem:array of Int32;size,d:Byte;cory,corx:Int32): Boolean;",
 	(char*)"FindGroundItemsBool", (char*)"Function FindGroundItemsBool(Gitem:array of Int32;size,d:Byte): Boolean;",
 	(char*)"FindNPCs1", (char*)"Function FindNPCs1(id:array of Int32;size,d:Byte;cory,corx:Int32): Boolean;",
-	(char*)"FindNPCs2", (char*)"Function FindNPCs2(id:array of Int32;size,d:Byte;h:Int32): Boolean;",
-	(char*)"FindNPCs3", (char*)"Function FindNPCs3(id:array of Int32;size,d:Byte;spot:Tpoint): Boolean;",
-	(char*)"FindNPCs4", (char*)"Function FindNPCs4(id:array of Int32;size,d:Byte;h:Int32;spot:Tpoint): Boolean;",
-	(char*)"ReadUpTxt", (char*)"Function ReadUpTxt(x:string): Boolean;",
+	//(char*)"FindNPCs2", (char*)"Function FindNPCs2(id:array of Int32;size,d:Byte;h:Int32): Boolean;",
+	//(char*)"FindNPCs3", (char*)"Function FindNPCs3(id:array of Int32;size,d:Byte;spot:Tpoint): Boolean;",
+	//(char*)"FindNPCs4", (char*)"Function FindNPCs4(id:array of Int32;size,d:Byte;h:Int32;spot:Tpoint): Boolean;",
+	//(char*)"ReadUpTxt", (char*)"Function ReadUpTxt(x:string): Boolean;",
 	(char*)"GetPAnimation", (char*)"Function GetPlayerAnimation(): Int32;",
-	(char*)"TileToScreen", (char*)"Function TileToScreen(x:Tpoint): Tpoint;",
-	(char*)"TileToMap", (char*)"Function TileToMap(x:Tpoint): Tpoint;",
+	//(char*)"TileToScreen", (char*)"Function TileToScreen(x:Tpoint): Tpoint;",
+	//(char*)"TileToMap", (char*)"Function TileToMap(x:Tpoint): Tpoint;",
 	(char*)"MousePos", (char*)"Function MousePos(): Tpoint;",
 	(char*)"MouseClick", (char*)"Procedure MouseClick(x:Tpoint;x2:Boolean);",
 	(char*)"CheckPAnim", (char*)"Function CheckPAnim(): Boolean;",
 	(char*)"CheckPAnim2", (char*)"Function CheckPAnim2(): Boolean;",
 	(char*)"CheckPAnim3", (char*)"Function CheckPAnim3(): Boolean;",
 	(char*)"CheckPAnim4", (char*)"Function CheckPAnim4(): Boolean;",
-	(char*)"WaitPAnim", (char*)"Function WaitPAnim(): Boolean;",
+	//(char*)"WaitPAnim", (char*)"Function WaitPAnim(): Boolean;",
 	(char*)"InveFull", (char*)"Function InveFull(): Boolean;",
 	(char*)"InveFreecount", (char*)"Function InveFreecount(): Byte;",
 	(char*)"InveItemcount", (char*)"Function InveItemcount(Item:Int32): Byte;",
-	(char*)"ReadPMove", (char*)"Function ReadPMove(): Boolean;",
+	//(char*)"ReadPMove", (char*)"Function ReadPMove(): Boolean;",
 	(char*)"ClickTile", (char*)"Function ClickTile(x:Tpoint;minimap:Int32): Boolean;",
 	(char*)"MouseDrag", (char*)"Procedure MouseDrag(x,x2:Tpoint);",
 	(char*)"MouseMove", (char*)"Procedure MouseMove(x:Tpoint);",
@@ -49,6 +49,8 @@ char* PascalExports[] =
 	(char*)"ReadNPCInFocusScreenxy", (char*)"Function ReadNPCInFocusScreenxy(): Tpoint;",
 	(char*)"ReadNPCInFocusHealth", (char*)"Function ReadNPCInFocusHealth(): Int32;",
 	(char*)"ReadNPCInFocusAnim", (char*)"Function ReadNPCInFocusAnim(): Int32;"
+	//(char*)"ReadInterface", (char*)"Function ReadInterface(Item:Int32): TRect;"
+
 };
 
 static const DWORD PascalExportCount = sizeof(PascalExports) / (sizeof(PascalExports[0]) * 2);
