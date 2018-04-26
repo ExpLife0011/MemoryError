@@ -4136,27 +4136,7 @@ FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 
 
 	if (ItemCoord.x != NULL) {
-		if (MapBoxMemoryLoc == NULL) {
-			// it seems main thing part is 2xffff end
-			MapBoxMemoryLoc = Locateinterface(1477, 84, 0xffff, 19);
-			//cout << "p1" << endl;
-		}
-		else {
-
-			//active check
-			DWORD bb3 = VirtPReadDword(MapBoxMemoryLoc + Ioff555);
-			DWORD bb4 = VirtPReadDword(MapBoxMemoryLoc + Ioff666);
-			//ids
-			WORD bb5 = VirtPReadWord(MapBoxMemoryLoc + Ioff55);
-			WORD bb7 = VirtPReadWord(MapBoxMemoryLoc + Ioff55 + 4);
-			WORD bb8 = VirtPReadWord(MapBoxMemoryLoc + Ioff55 + 6);
-			DWORD bb9 = VirtPReadDword(MapBoxMemoryLoc + Ioff55 + 8);
-			//check if interface is still in same place
-			if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 84 && bb8 == 0xffff && bb9 == 19)) {
-			}
-			else { cout <<hex<< MapBoxMemoryLoc << endl; MapBoxMemoryLoc = Locateinterface(1477, 84, 0xffff, 19); }
-			if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 84 && bb8 == 0xffff && bb9 == 19)) {
-
+		if (InterfCheck(MapBoxMemoryLoc, 1477, 87, 0xffff, 44)) {
 				//cout << "find1" << "\n";
 				p = GetInterfaceData(MapBoxMemoryLoc);
 				if (p.xys.x > 0 && p.xys.y > 0) {
@@ -4186,6 +4166,9 @@ FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 					return{ endcalc.x,endcalc.y };
 				}
 			}
+		else {
+			cout << "MapBox" << endl;
+			MapBoxMemoryLoc = Locateinterface(1477, 87, 0xffff, 44);
 		}
 	}
 	return{ 0.f,0.f };
@@ -4199,11 +4182,10 @@ WPOINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 	InterfaceComp p;
 
 	//cout << "find0" << "\n";
+	//inventory box
+
 	if (ItemCoord.x != NULL) {
-		if (MapBoxMemoryLoc == 0) {
-			MapBoxMemoryLoc = Locateinterface(1477, 87, 0xffff, 44);
-		}
-		else {
+		if (InterfCheck(MapBoxMemoryLoc, 1477, 87, 0xffff, 44)) {
 			//cout << "find1" << "\n";
 			p = GetInterfaceData(MapBoxMemoryLoc);
 			if (p.xys.x > 0 && p.xys.y > 0) {
@@ -4239,6 +4221,10 @@ WPOINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 
 				return{ endcalc.x, endcalc.y };
 			}
+		}
+		else {
+			cout << "MapBox" << endl;
+			MapBoxMemoryLoc = Locateinterface(1477, 87, 0xffff, 44);
 		}
 	}
 	return{ 0,0 };
