@@ -117,7 +117,8 @@ static int numProcessors;
 static HANDLE self;
 
 VOID ReadInterf();
-VOID ReadInterfFind(WORD, WORD, WORD, WORD);
+VOID ReadInterf2();
+InterfaceComp2 GetInterfaceData2(DWORD64);
 
 bool binary_to_compressed_c(const char* filename, const char* symbol, bool use_base85_encoding, bool use_compression);
 static const char*  GetDefault2CompressedFontDataTTFBase85();
@@ -128,7 +129,6 @@ BOOLEAN CheckRS3();
 VOID Cpuinit();
 VOID LoadItemText();
 VOID LoadClueScrolls();
-BOOLEAN FindAppEx(HWND WindowHandle);
 VOID FindRS();
 BOOLEAN FindRS3();
 BOOLEAN ScreenFilter(WPOINT);
@@ -145,7 +145,7 @@ int GetFloorLv_2();
 int GetMouseID_();
 FFPOINT TileToMouseTest22(FFPOINT);
 BOOLEAN FindSObj(vector<DWORD>, BYTE);
-FFPOINT InvFindItem(DWORD);
+WPOINT InvFindItem(DWORD);
 BOOLEAN FindGItemBool_(vector<DWORD>);
 BOOLEAN FindGItem_(vector<DWORD>, BYTE, INT, INT);
 BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT);
@@ -201,6 +201,8 @@ DWORD64 FindLP();
 BOOLEAN FindNPCLock_(vector<DWORD>, BYTE);
 NPCFOCUS ReadNPCInFocus_();
 BOOLEAN NPCFocusClick_(BYTE);
+DWORD FindVarBit(WORD);
+string FindSideText();
 
 
 

@@ -14,6 +14,8 @@ vector<DWORD> procIDs;
 HANDLE HProc = NULL;
 HWND WProc,WProc2 = NULL;
 HWND WProcC = NULL;
+
+//rs main exe module
 DWORD64 RSExeStart;
 DWORD64 RSExeSize;
 string RSExeFile;
@@ -134,6 +136,7 @@ vector<WORD>NPCyend;
 vector<WORD>NPCymid;
 vector<WORD>NPCxsize;
 vector<WORD>NPCysize;
+vector<BYTE>NPCstate;
 ////////////////////////////
 vector<FLOAT> GIX;
 vector<FLOAT> GIY;
@@ -151,12 +154,12 @@ vector<WORD>GIymid2;
 vector<string> GIText2;
 vector<DWORD64> GIMem2;
 ///////////////////////////////////////
-vector<FLOAT>Invx;
-vector<FLOAT>Invy;
-vector<FLOAT>Invxs;
-vector<FLOAT>Invys;
-vector<FLOAT> BoxMidsx(27);
-vector<FLOAT> BoxMidsy(27);
+vector<WORD>Invx;
+vector<WORD>Invy;
+vector<WORD>Invxs;
+vector<WORD>Invys;
+vector<WORD> BoxMidsx(27);
+vector<WORD> BoxMidsy(27);
 vector<INT> InvSlot2;
 vector<string> InvText;
 vector<DWORD> InvId;
@@ -187,7 +190,7 @@ DWORD64 BANKArrPrev, BANKIArrPrev, LOOTArrPrev;
 //////////////////////////////////////
 DWORD64 BankTemp, InvBoxMemoryLoc, MapBoxMemoryLoc,ProgTemp,ChooseITemp,ChooseTTemp,LootTemp,
 EqBoxMemoryLoc, PrayBoxMemoryLoc, SongBoxMemoryLoc, ChatBoxMemoryLoc, AbilBoxMemoryLoc, MenoBoxMemoryLoc,
-SkillRingBoxMemoryLoc, MIBoxMemoryLoc;
+SkillRingBoxMemoryLoc, MIBoxMemoryLoc, InterfTempMemoryLoc, UpTextTempMemoryLoc;
 //////////////////////////////////////
 vector<DWORD64> intertest;
 vector<BYTE> intertest2;
@@ -221,6 +224,7 @@ list<MEMORY_BASIC_INFORMATION64> buff2;
 DWORD64 ClientBase = NULL;
 DWORD PlaceHolderX = NULL;
 DWORD PlaceHolderY = NULL;
+DWORD InterfAdd = 0;
 DWORD64 Interfexp1;
 DWORD64 ScAdd = NULL;
 DWORD64 NPCAdd = NULL;
@@ -595,7 +599,7 @@ string VirtPReadString(DWORD64 SummPointer)
 string VirtPReadChar(DWORD64 SummPointer)
 {
 	
-	const int readsize=20;
+	const int readsize=80;
 	//DWORD64 val = NULL;
 	//DWORD64 val2 = NULL;
 	//DWORD val3 = NULL;
@@ -2484,10 +2488,10 @@ DWORD64 ScanInteraceArray(){
 	//DWORD value1 = 0x04000000;
 
 
-	//
+	//inventory box
 	PatternSearch PS1{
-		0xc5, 0x05, 0x0, 0x0, 0x68, 0x0, 0xff, 0xff,
-		0x13, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0xc5, 0x05, 0x0, 0x0, 0x6b, 0x0, 0xff, 0xff,
+		0x2c, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
 	};
 
@@ -3452,11 +3456,11 @@ VOID RefVarpBits1()
 	//1
 	vector<DWORD64> results21;
 	vector<DWORD> results2id1;
-	vector<DWORD64> results2base1;
+	//vector<DWORD64> results2base1;
 	vector<DWORD64> results31;
 	vector<DWORD> results3id1;
 	vector<DWORD64> results3base1;
-	vector<DWORD64> results3basead1;
+	//vector<DWORD64> results3basead1;
 	//2
 	vector<DWORD64> results22;
 	vector<DWORD> results2id2;
@@ -3470,12 +3474,13 @@ VOID RefVarpBits1()
 	DWORD64 byte1 = 0xFFFFFFFFFFFFFFFF;
 	DWORD byte2 = 0x000003EA;
 	DWORD64 byte3 = 0xFFFFFFFFFFFFFFFE;
-	MEMss BlockA;
-	//hp 93 02 00 00
-	//slay b7 00 00 00
+	//MEMss BlockA;
+	//diffrence size
+	DWORD64 distance = 0x50000;
+
 	PatternSearch ps{
 		0xea, 0x03, 0x00, 0x00
-		, 0x0, 0x0, 0x0, 0x0
+		//, 0x0, 0x0, 0x0, 0x0
 	};
 
 
@@ -3498,166 +3503,111 @@ VOID RefVarpBits1()
 
 			for (DWORD i = 0; i < results.size(); i++) {
 
-			    BYTE bb1 = VirtPReadByte(results[i] - 0x21);
-			   //thers seems to be double 64 and 32 bit?
-				//DWORD64 bb2 = VirtPRead64(results[i] - 0x20);
-				//DWORD bb3 = VirtPReadDword(results[i] + 0x24);
-				//ea check 58 and 80
-				//bools?
-				//stats?
-				DWORD64 ea11 = VirtPRead64(results[i] - 0x80);
-				DWORD64 ea21 = VirtPRead64(results[i] + 0x80);
-				DWORD64 ea31 = VirtPRead64(results[i] - 0x100);
-				DWORD64 ea41 = VirtPRead64(results[i] + 0x100);
-				DWORD64 ea51 = VirtPRead64(results[i] - 0x180);
-				DWORD64 ea61 = VirtPRead64(results[i] + 0x180);
-				DWORD64 ea71 = VirtPRead64(results[i] - 0x200);
-				DWORD64 ea81 = VirtPRead64(results[i] + 0x200);
-				DWORD64 ea91 = VirtPRead64(results[i] - 0x280);
-				DWORD64 ea101 = VirtPRead64(results[i] + 0x280);
+				BYTE bb1 = VirtPReadByte(results[i] - 0x21);
+				//thers seems to be double 64 and 32 bit?
+				 //DWORD64 bb2 = VirtPRead64(results[i] - 0x20);
+				 //DWORD bb3 = VirtPReadDword(results[i] + 0x24);
+				 //ea check 58 and 80
+				 //bools?
+				 //stats?
+				DWORD ea11 = VirtPReadDword(results[i] - 0x80);
+				DWORD ea21 = VirtPReadDword(results[i] + 0x80);
+				DWORD ea31 = VirtPReadDword(results[i] - 0x100);
+				DWORD ea41 = VirtPReadDword(results[i] + 0x100);
+				DWORD ea51 = VirtPReadDword(results[i] - 0x180);
+				DWORD ea61 = VirtPReadDword(results[i] + 0x180);
+				DWORD ea71 = VirtPReadDword(results[i] - 0x200);
+				DWORD ea81 = VirtPReadDword(results[i] + 0x200);
+				DWORD ea91 = VirtPReadDword(results[i] - 0x280);
+				DWORD ea101 = VirtPReadDword(results[i] + 0x280);
+				DWORD id = VirtPReadDword(results[i] - 0x10);
 
-				DWORD64 ea12 = VirtPRead64(results[i] - 0x58);
-				DWORD64 ea22 = VirtPRead64(results[i] + 0x58);
-				DWORD64 ea32 = VirtPRead64(results[i] - 0xb0);
-				DWORD64 ea42 = VirtPRead64(results[i] + 0xb0);
-				DWORD64 ea52 = VirtPRead64(results[i] - 0x108);
-				DWORD64 ea62 = VirtPRead64(results[i] + 0x108);
-				DWORD64 ea72 = VirtPRead64(results[i] - 0x160);
-				DWORD64 ea82 = VirtPRead64(results[i] + 0x160);
-				DWORD64 ea92 = VirtPRead64(results[i] - 0x160);
-				DWORD64 ea102 = VirtPRead64(results[i] + 0x160);
+				DWORD ea12 = VirtPReadDword(results[i] - 0x58);
+				DWORD ea22 = VirtPReadDword(results[i] + 0x58);
+				DWORD ea32 = VirtPReadDword(results[i] - 0xb0);
+				DWORD ea42 = VirtPReadDword(results[i] + 0xb0);
+				DWORD ea52 = VirtPReadDword(results[i] - 0x108);
+				DWORD ea62 = VirtPReadDword(results[i] + 0x108);
+				DWORD ea72 = VirtPReadDword(results[i] - 0x160);
+				DWORD ea82 = VirtPReadDword(results[i] + 0x160);
+				DWORD ea92 = VirtPReadDword(results[i] - 0x160);
+				DWORD ea102 = VirtPReadDword(results[i] + 0x160);
 
 				//80 size//1
 				if (
-				    bb1 == 0x91
+					bb1 == 0x91
+					//&& 
+					//id == 1247
+					&& ea11 == byte2
 					&& ea11 == byte2
 					&& ea21 == byte2
 					&& ea31 == byte2 && ea41 == byte2
 					&& ea51 == byte2 && ea61 == byte2
 					&& ea71 == byte2 && ea81 == byte2
 					&& ea91 == byte2 && ea101 == byte2
-					) {				
+					) {
 					results21.push_back(results[i]);
-					DWORD id = VirtPReadDword(results[i] - 0x10);
-					results2id1.push_back(id);
-					results2base1.push_back(DeterMemoryBlockLenght(results[i]).start);
+					//DWORD id = VirtPReadDword(results[i] - 0x10);
+					//results2id1.push_back(id);
+
 				}
 				//58 size//2
-				if (
-					 ea12 == byte2 
-					 && ea22 == byte2 
-					 && ea32 == byte2 && ea42 == byte2
-					 && ea52 == byte2 && ea62 == byte2
-					 && ea72 == byte2 && ea82 == byte2
-					 && ea92 == byte2 && ea102 == byte2
+			    if (
+					ea12 == byte2
+					&& ea22 == byte2
+					//&& 
+					&& ea32 == byte2 && ea42 == byte2
+					&& ea52 == byte2 && ea62 == byte2
+					&& ea72 == byte2 && ea82 == byte2
+					&& ea92 == byte2 && ea102 == byte2
 					) {
+					//cout << hex << results[i] << endl;
 					results22.push_back(results[i]);
-					DWORD id = VirtPReadDword(results[i] - 0x10);
-					results2id2.push_back(id);
-					results2base2.push_back(DeterMemoryBlockLenght(results[i]).start);
+					//DWORD id = VirtPReadDword(results[i] - 0x10);
+					//results2id2.push_back(id);
 				}
 			}
+		}
 
-			//1
-			//smallest number to up		
-			if (debug) { cout << "varbits1: " << dec << results2id1.size() << "\n"; }
-			if (!results2id1.empty()) {
-				for (DWORD i = 10; i < 9000; i++) {
-					for (DWORD ii = 0; ii < results2id1.size(); ii++) {
-						if (results2id1[ii] == i) {
-							results31.push_back(results21[ii]);
-							results3id1.push_back(results2id1[ii]);
-						}}}}
-
+			//1           
 			//compares if found value is in same chunk
-			if (!results2base1.empty()) {
-				results3base1.push_back(55999);
-				results3basead1.push_back(55999);
-				for (DWORD i = 0; i < results2base1.size(); i++) {
-					Found = FALSE;
-		        	for (DWORD ii = 0; ii < results3base1.size(); ii++) {
-						if (results2base1[i] == results3base1[ii]) { Found = TRUE; break; }
+			if (!results21.empty()) {
+				DWORD64 lastfound = 0;
+				for (DWORD i = 0; i < results21.size(); i++) {
+					if ((results21[i] - lastfound) > distance) {
+						//cout << lastfound<< endl;
+						lastfound = results21[i];
+						results3base1.push_back(results21[i]);
+					}
 				}
-					if (Found == FALSE) { results3basead1.push_back(results21[i]); }
-					if (Found ==FALSE) { results3base1.push_back(results2base1[i]); }
-				}}
 
-
-
-			if (!results3base1.empty()) {
-				if (debug) { cout << "varbitsb1: " << dec << results3base1.size() << "\n"; }
-				for (DWORD i = 0; i < results3base1.size(); i++) {
-					cout << "base1: " << hex << results3base1[i] <<" : "<< "1staddr1: "<< results3basead1[i] << "\n";
+				if (!results3base1.empty()) {
+					if (debug) { cout << "varbitsb1: " << dec << results3base1.size() << "\n"; }
+					for (DWORD i = 0; i < results3base1.size(); i++) {
+						cout << "base1: " << hex << results3base1[i] << "\n";
+					}
 				}
-			}
-
-			if (!results31.empty()) {
-				if (debug) { cout << "varbits21: " << dec << results31.size() << "\n"; }
-				for (DWORD i = 0; i < results31.size(); i++) {	
-					//if (VirtPReadDword(results3[i] - 0x10) == 1581) { cout << "1581" << " : " << hex << results3[i]<<endl; }
-					//if (VirtPReadDword(results3[i] - 0x10) == 1582) { cout << "1582" << " : " << hex << results3[i] << endl; }
-				     // cout << "Id: " << dec << results3id[i] <<" : "<<hex<< results3[i] << "\n";
-					//cout << "foundhp: " << hex << results3[i] << "\n";
-					
-					//BlockA = DeterMemoryBlockLenght(results3[i]);
-					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
-				}		
-				//delete
-				results3basead1.erase(results3basead1.begin());
-				VarBits1 = results3basead1;
+				VarBits1 = results3base1;
 			}
 
 			//2
-			//smallest number to up		
-			if (debug) { cout << "varbits2: " << dec << results2id2.size() << "\n"; }
-			if (!results2id2.empty()) {
-				for (DWORD i = 10; i < 9000; i++) {
-					for (DWORD ii = 0; ii < results2id2.size(); ii++) {
-						if (results2id2[ii] == i) {
-							results32.push_back(results22[ii]);
-							results3id2.push_back(results2id2[ii]);
-						}
-					}
-				}
-			}
-
 			//compares if found value is in same chunk
-			if (!results2base2.empty()) {
-				results3base2.push_back(55999);
-				results3basead2.push_back(55999);
-				for (DWORD i = 0; i < results2base2.size(); i++) {
-					Found = FALSE;
-					for (DWORD ii = 0; ii < results3base2.size(); ii++) {
-						if (results2base2[i] == results3base2[ii]) { Found = TRUE; break; }
+			if (!results22.empty()) {
+				DWORD64 lastfound = 0;
+				for (DWORD i = 0; i < results22.size(); i++) {
+					if ((results22[i] - lastfound) > distance) {
+						lastfound = results22[i];
+						results3base2.push_back(results22[i]);
 					}
-					if (Found == FALSE) { results3basead2.push_back(results22[i]); }
-					if (Found == FALSE) { results3base2.push_back(results2base2[i]); }
 				}
-			}
 
-
-
-			if (!results3base2.empty()) {
-				if (debug) { cout << "varbitsb2: " << dec << results3base2.size() << "\n"; }
-				for (DWORD i = 0; i < results3base2.size(); i++) {
-					cout << "base2: " << hex << results3base2[i] << " : " << "1staddr2: " << results3basead2[i] << "\n";
+				if (!results3base2.empty()) {
+					if (debug) { cout << "varbitsb2: " << dec << results3base2.size() << "\n"; }
+					for (DWORD i = 0; i < results3base2.size(); i++) {
+						cout << "base2: " << hex << results3base2[i] << "\n";
+					}
 				}
-			}
-
-			if (!results32.empty()) {
-				if (debug) { cout << "varbits22: " << dec << results32.size() << "\n"; }
-				for (DWORD i = 0; i < results32.size(); i++) {
-					//if (VirtPReadDword(results3[i] - 0x10) == 1581) { cout << "1581" << " : " << hex << results3[i]<<endl; }
-					//if (VirtPReadDword(results3[i] - 0x10) == 1582) { cout << "1582" << " : " << hex << results3[i] << endl; }
-					// cout << "Id: " << dec << results3id[i] <<" : "<<hex<< results3[i] << "\n";
-					//cout << "foundhp: " << hex << results3[i] << "\n";
-
-					//BlockA = DeterMemoryBlockLenght(results3[i]);
-					//cout << "foundhpStart: " << hex << BlockA.start << "\n";
-				}
-				results3basead2.erase(results3basead2.begin());
-				VarBits2 = results3basead2;
-			}
+				VarBits2 = results3base2;
 		}
 	}
 }
@@ -4082,6 +4032,31 @@ BOOLEAN InterfCheck(DWORD64 mem1, WORD id, WORD id2, WORD id3, WORD id4)
 	return FALSE;
 }
 
+//Check if given interface2 is still active and there
+BOOLEAN InterfCheck2(DWORD64 mem1, WORD id, WORD id2, WORD id3, WORD id4)
+{
+	if (mem1 == NULL) {
+		cout << "ZeroInterf2" << endl;
+		return FALSE;
+	}
+	else {
+		//active check
+		DWORD bb3 = VirtPReadDword(mem1 + I2off555);
+		DWORD bb4 = VirtPReadDword(mem1 + I2off666);
+		//ids
+		WORD bb5 = VirtPReadWord(mem1 + I2off55);
+		WORD bb7 = VirtPReadWord(mem1 + I2off55 + 4);
+		WORD bb8 = VirtPReadWord(mem1 + I2off55 + 6);
+		WORD bb9 = VirtPReadWord(mem1 + I2off55 + 8);
+		//check if interface is still in same place
+		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == id && bb7 == id2 && bb8 == id3 && bb9 == id4)) {
+			return TRUE;
+		}
+		return FALSE;
+	}
+	return FALSE;
+}
+
 //finds interface match in ReadInterf() and returns memory location
 DWORD64 Locateinterface(WORD id, WORD id2, WORD id3, WORD id4) {
 	ReadInterf();
@@ -4092,6 +4067,22 @@ DWORD64 Locateinterface(WORD id, WORD id2, WORD id3, WORD id4) {
 			if (InterfID[i] == id && InterfID2[i] == id2 && InterfID3[i] == id3 && InterfID4[i] == id4) {
 				//cout <<"Inteface loc:"<<hex << InterfMem[i] << "\n";
 				return InterfMem[i];
+			}
+		}
+	}
+	return 0;
+}
+
+//finds interface match in ReadInterf2() and returns memory location
+DWORD64 Locateinterface2(WORD id, WORD id2, WORD id3, WORD id4) {
+	ReadInterf2();
+	if (!InterfID12.empty()) {
+		cout << "Total intefaces amount2:" << dec << InterfID12.size() << "\n";
+		for (DWORD i = 0; i < InterfID12.size(); i++) {
+			//filter
+			if (InterfID[i] == id && InterfID2[i] == id2 && InterfID3[i] == id3 && InterfID4[i] == id4) {
+				//cout <<"Inteface loc:"<<hex << InterfMem[i] << "\n";
+				return InterfMem2[i];
 			}
 		}
 	}
@@ -4122,6 +4113,7 @@ InterfaceComp2 GetInterfaceData2(DWORD64 mem) {
 	InterfaceComp2 p;
 	if (mem > 0) {
 		//(pixels)
+		//cout << hex << "GID2:" << mem << endl;
 		p.xy = { VirtPReadWord(mem + Ioff11), VirtPReadWord(mem + Ioff22) };
 		p.xys = { VirtPReadWord(mem + Ioff33) , VirtPReadWord(mem + Ioff44) };
 		p.h = VirtPReadByte(mem + Ioffhhh);
@@ -4209,7 +4201,7 @@ WPOINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 	//cout << "find0" << "\n";
 	if (ItemCoord.x != NULL) {
 		if (MapBoxMemoryLoc == 0) {
-			MapBoxMemoryLoc = Locateinterface(1477, 84, 0xffff, 19);
+			MapBoxMemoryLoc = Locateinterface(1477, 87, 0xffff, 44);
 		}
 		else {
 			//cout << "find1" << "\n";
@@ -4926,13 +4918,13 @@ VOID FilterInventory()
 
 	DWORD64 offh = 0;
 	INT limit = 0;
-	FFPOINT box;
+	WPOINT box;
 
-	if (InterfCheck(InvBoxMemoryLoc, 1477, 104, 0xffff, 19)) {
-		box = GetInterfaceData(InvBoxMemoryLoc).xy;
+	if (InterfCheck(InvBoxMemoryLoc, 1477, 107, 0xffff, 44)) {
+		box = GetInterfaceData2(InvBoxMemoryLoc).xy;
 	}
 	else {
-		InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19);
+		InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44);
 	}
 
 
@@ -4959,12 +4951,12 @@ VOID FilterInventory()
 				DWORD v7 = VirtPReadDword(Hold + I2off55+8);
 				if (v1==1 && v2==1 && v3==1473 && v4 == 5 && v7==5) {
 
-                          FLOAT startx = VirtPReadWord(Hold + I2off11);
-						  FLOAT startxs = VirtPReadWord(Hold + I2off332);
-					      Invx.push_back(startx+box.x+(startxs/2.f)+3.5f);
-						  FLOAT starty = VirtPReadWord(Hold + I2off22);
-						  FLOAT startys = VirtPReadWord(Hold + I2off442);
-						  Invy.push_back(starty+box.y+(startys/2.f)+45.f);
+                          WORD startx = VirtPReadWord(Hold + I2off11);
+						  WORD startxs = VirtPReadWord(Hold + I2off332);
+					      Invx.push_back(startx+box.x+(startxs/2)+3);
+						  WORD starty = VirtPReadWord(Hold + I2off22);
+						  WORD startys = VirtPReadWord(Hold + I2off442);
+						  Invy.push_back(starty+box.y+(startys/2)+45);
 						  BYTE slots = VirtPReadByte(Hold + I2off55 + 6);
 						  InvSlot2.push_back(slots);
 						  DWORD ids = VirtPReadDword(Hold + I2offitemids);
@@ -5466,8 +5458,9 @@ VOID ReadInterf()
 					WORD bb5 = VirtPReadWord(Hold + Ioff55);
 					WORD bb7 = VirtPReadWord(Hold + Ioff55 + 4);
 					WORD bb8 = VirtPReadWord(Hold + Ioff55 + 6);
-					WORD bb9 = VirtPReadWord(Hold + Ioff55 + 8);
-					//string s = VirtPReadChar(Sc + Ioffh + Ioff4);
+					WORD bb9 = VirtPReadWord(Hold + Ioff55 + 8); 
+					DWORD64 placeholder2 = VirtPRead64(Hold + Ioff00);
+					//string s = VirtPReadChar(placeholder2);
 					//InterName.push_back(s);
 					if (bb3 == 0 && bb4 == 0) { opend = FALSE; }
 					else { opend = TRUE; }
@@ -5511,10 +5504,10 @@ VOID FindInterfAll()
 	PatternSearch PS1{};
 
 	if (ScAdd1 != NULL) {
-		if (InterfCheck(InvBoxMemoryLoc, 1477, 104, 0xffff, 19)) {
+		if (InterfCheck(InvBoxMemoryLoc, 1477, 107, 0xffff, 44)) {
 		}
 		else {
-			InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19);
+			InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44);
 		}
 		//use inventory box as starting point to find all
 		if (InvBoxMemoryLoc != NULL) {
@@ -5677,101 +5670,112 @@ BOOLEAN ScreenFilter(WPOINT mxy)
 {
 	vector<WPOINT>SFxy;
 	vector<WPOINT>SFxysize;
-	vector<string>SFxytest;
+	//vector<string>SFxytest;
 	WPOINT p = GetRsResolution2();
 
 	if (mxy.x > 0 && mxy.y > 0 && mxy.x < p.x && mxy.y < p.y) {
 		
 		//inventory box
-		if (InterfCheck(InvBoxMemoryLoc, 1477, 104, 0xffff, 19)) {
+		if (InterfCheck(InvBoxMemoryLoc, 1477, 107, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(InvBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("InvBox");
+			//SFxytest.push_back("InvBox");
 		}
 		else {
 			cout << "InvBox" << endl;
-			InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19);
+			InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44);
 		}
 		
 		//equipment box
-		if (InterfCheck(EqBoxMemoryLoc, 1477, 179, 0xffff, 19)) {
+		if (InterfCheck(EqBoxMemoryLoc, 1477, 189, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(EqBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("Eqbox");
+			//SFxytest.push_back("Eqbox");
 		}
 		else {
 			cout << "Eqbox" << endl;
-			EqBoxMemoryLoc = Locateinterface(1477, 179, 0xffff, 19);
+			EqBoxMemoryLoc = Locateinterface(1477, 189, 0xffff, 44);
 		}
 		//prayer box
-		if (InterfCheck(PrayBoxMemoryLoc, 1477, 201, 0xffff, 19)) {
+		if (InterfCheck(PrayBoxMemoryLoc, 1477, 211, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(PrayBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("Praybox");
+			//SFxytest.push_back("Praybox");
 		}
 		else {
 			cout << "Praybox" << endl;
-			PrayBoxMemoryLoc = Locateinterface(1477, 201, 0xffff, 19);
+			PrayBoxMemoryLoc = Locateinterface(1477, 211, 0xffff, 44);
 		}
 		//song list box
-		if (InterfCheck(SongBoxMemoryLoc, 1477, 376, 0xffff, 19)) {
+		if (InterfCheck(SongBoxMemoryLoc, 1477, 386, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(SongBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("SongsBox");
+			//SFxytest.push_back("SongsBox");
 		}
 		else {
 			cout << "SongsBox" << endl;
-			SongBoxMemoryLoc = Locateinterface(1477, 376, 0xffff, 19);
+			SongBoxMemoryLoc = Locateinterface(1477, 386, 0xffff, 44);
 		}
 		//map box
-		if (InterfCheck(MapBoxMemoryLoc, 1477, 84, 0xffff, 19)) {
+		if (InterfCheck(MapBoxMemoryLoc, 1477, 87, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(MapBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("MapBox");
+			//SFxytest.push_back("MapBox");
 		}
 		else {
 			cout << "MapBox" << endl;
-			MapBoxMemoryLoc = Locateinterface(1477, 84, 0xffff, 19);
+			MapBoxMemoryLoc = Locateinterface(1477, 87, 0xffff, 44);
 			//cout << hex << MapBoxMemoryLoc <<endl;
 		}		
 		//text box
-		if (InterfCheck(ChatBoxMemoryLoc, 1477, 115, 0xffff, 19)) {
+		if (InterfCheck(ChatBoxMemoryLoc, 1477, 118, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(ChatBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("ChatBox");
+			//SFxytest.push_back("ChatBox");
 		}
 		else {
 			cout << "ChatBox" << endl;
-			ChatBoxMemoryLoc = Locateinterface(1477, 115, 0xffff, 19);
+			ChatBoxMemoryLoc = Locateinterface(1477, 118, 0xffff, 44);
 			//cout << hex << ChatBoxMemoryLoc << endl;
 		}
 		//ability box
-		if (InterfCheck(AbilBoxMemoryLoc, 1477, 59, 0xffff, 19)) {
+		if (InterfCheck(AbilBoxMemoryLoc, 1477, 62, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(AbilBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("AbilityBox");
+			//SFxytest.push_back("AbilityBox");
 		}
 		else {
 			cout << "AbilityBox" << endl;
-			AbilBoxMemoryLoc = Locateinterface(1477, 59, 0xffff, 19);
+			AbilBoxMemoryLoc = Locateinterface(1477, 62, 0xffff, 44);
 		}
 		//menuicons box
-		if (InterfCheck(MIBoxMemoryLoc, 1477, 43, 0xffff, 19)) {
+		if (InterfCheck(MIBoxMemoryLoc, 1477, 45, 0xffff, 44)) {
 			InterfaceComp2 data = GetInterfaceData2(MIBoxMemoryLoc);
 			SFxy.push_back(data.xy);
 			SFxysize.push_back(data.xys);
-			SFxytest.push_back("Menuicons");
+			//SFxytest.push_back("Menuicons");
 		}
 		else {
 			cout << "Menuicons" << endl;
-			MIBoxMemoryLoc = Locateinterface(1477, 43, 0xffff, 19);
+			MIBoxMemoryLoc = Locateinterface(1477, 45, 0xffff, 44);
+		}
+		//get members box
+		if (InterfCheck(MIBoxMemoryLoc, 1477, 743, 0xffff, 18)) {
+			InterfaceComp2 data = GetInterfaceData2(MIBoxMemoryLoc);
+			SFxy.push_back(data.xy);
+			SFxysize.push_back(data.xys);
+			//SFxytest.push_back("Menuicons");
+		}
+		else {
+			cout << "Menuicons" << endl;
+			MIBoxMemoryLoc = Locateinterface(1477, 45, 0xffff, 44);
 		}
 		//menopaus box
 		/*
@@ -5802,7 +5806,7 @@ BOOLEAN ScreenFilter(WPOINT mxy)
 			if(mxy.y>SFxy[i].y && mxy.y<(SFxy[i].y + SFxysize[i].y)){
 				//cout << dec << mxy.x << ":" << mxy.y << endl;
 //cout<<dec<<SFxy[i].x<<":"<< SFxysize[i].x <<":"<< SFxy[i].y <<":"<< (SFxy[i].y + SFxysize[i].y) << endl;
-				cout << SFxytest[i] << endl;
+				//cout << SFxytest[i] << endl;
 					return FALSE;
 				}}
 		}}
@@ -5815,7 +5819,7 @@ else {
 	return TRUE;
 }
 
-//interfaces debug//IF2//text//secondary//old
+//interfaces debug//IF2//text//secondary
 VOID ReadInterf2()
 {
 	InterfX2.clear();
@@ -5871,7 +5875,8 @@ VOID ReadInterf2()
 					WORD bb7 = VirtPReadWord(Hold + I2off55 + 4);
 					WORD bb8 = VirtPReadWord(Hold + I2off55 + 6);
 					WORD bb9 = VirtPReadWord(Hold + I2off55 + 8);
-					//string s = VirtPReadChar(Sc + I2offh + I2off4);
+					DWORD64 placeholder2 = VirtPRead64(Hold + Ioff00);
+					//string s = VirtPReadChar(placeholder2);
 					if (bb3 == 0 && bb4 == 0) { opend = FALSE; }
 					else { opend = TRUE; }
 
@@ -6142,7 +6147,7 @@ VOID SettingTest()
 			for (DWORD ii = 0; ii < limit; ii++) {
 				offh = offh + off1;
 				DWORD64 Hold = Sc + offh;
-				//BYTE v1 = VirtPReadByte(Hold - 0x21);
+				BYTE v1 = VirtPReadByte(Hold - 0x21);
 				DWORD64 v2 = VirtPRead64(Hold);
 				//DWORD64 v3 = VirtPRead64(Sc + offh - 0x20);
 				if (
@@ -6152,8 +6157,8 @@ VOID SettingTest()
 				//	&&
 					//v3 == 1
 					) {
-					DWORD64 id = VirtPReadWord(Hold - 0x10);
-					if (id > 10) {
+					DWORD64 id = VirtPRead64(Hold - 0x10);
+					if (id > 10 && id<9000) {
 						SettingsAddr.push_back(Hold);
 						SettingsId.push_back(id);
 						DWORD state = VirtPReadDword(Hold + 0x20);
@@ -6183,8 +6188,8 @@ VOID SettingTest()
 					//	&&
 					//v3 == 1
 					) {
-					DWORD64 id = VirtPReadWord(Hold - 0x10);
-					if (id > 10) {
+					DWORD64 id = VirtPRead64(Hold - 0x10);
+					if (id > 10 && id < 9000) {
 						SettingsAddr.push_back(Hold);
 						SettingsId.push_back(id);
 						DWORD state = VirtPReadDword(Hold + 0x20);
@@ -6412,6 +6417,7 @@ VOID ReadCObjArrays()
 	NPCymid.clear();
 	NPCxsize.clear();
 	NPCysize.clear();
+	NPCstate.clear();
 	//
 	ObjectsXf.clear();
 	ObjectsYf.clear();
@@ -6577,7 +6583,10 @@ VOID ReadCObjArrays()
 							if (bb1 > 0.f && bb2 > 0.f) {
 								BYTE active1 = VirtPReadByte(PlaceHolder + npca1);
 								BYTE active2 = VirtPReadByte(PlaceHolder + npca2);
+								//1==is active but not on screen, 2 and higher active on screen
 								if ((active1 > 0 && active1 < 4) && (active2 > 0 && active2 < 7)) {
+									//if its 1 then its active but 100% not on screen
+									//NPCstate.push_back(active1);
 									//printf("ok1:\n");
 									//if (CheckVisibleLimit(bb1, bb2)) {
 										//printf("ok2:\n");
@@ -6611,8 +6620,6 @@ VOID ReadCObjArrays()
 									NPCymid.push_back(resy - npcym);
 									NPCxsize.push_back(npcxsize);
 									NPCysize.push_back(npcysize);
-
-
 
 									//}
 								//}
@@ -7272,6 +7279,48 @@ FFPOINT ReadCompass() {
 	return{ 0,0,0 };
 }
 
+//finds and reads varpbits
+DWORD FindVarBit(WORD id)
+{
+	SettingTest();
+	for (DWORD i = 0; i < SettingsId.size(); i++) {
+		if (SettingsId[i]==id) {
+			cout <<hex<< SettingsAddr[i] << endl;
+			//cout << SettingsState[i]<< endl;
+			return SettingsState[i];
+		}
+	}
+	return 0;
+}
+
+// finds and reads tooltip
+string FindSideText() {
+	string s;
+	//whole screen box
+	if (InterfCheck(UpTextTempMemoryLoc, 1477, 815, 0xffff, 813)) {
+		//cout << hex << UpTextTempMemoryLoc << endl;
+		if (UpTextTempMemoryLoc != NULL) {
+			DWORD64 hold = VirtPRead64(UpTextTempMemoryLoc + 0x228) + 0x8;
+			DWORD holdx = VirtPRead64(UpTextTempMemoryLoc + 0x90);
+			DWORD holdy = VirtPRead64(UpTextTempMemoryLoc + 0x94);
+			if (holdx<0xffff && holdy<0xffff) {
+				//fork spot//read first
+				DWORD64 hold2 = VirtPRead64(hold);
+				DWORD64 hold3 = VirtPRead64(hold2 + 0x1d8);
+				s = VirtPReadChar(hold3);
+				return s;
+			}
+		}
+		}else {
+		cout << "Looking Up Text" << endl;
+		//keeps crashing here without wait
+		Sleep(10);
+		UpTextTempMemoryLoc = Locateinterface(1477, 815, 0xffff, 813);
+		Sleep(10);
+	}
+	return s;
+}
+
 //tileclick
 BOOLEAN ClickTile2_(POINT p)  {
 	RECT rs;
@@ -7514,10 +7563,14 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 
 //finds x and y for npc
 //max distance from player
-BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
+BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory) {
 
 	vector<FLOAT> MatchNPCsDist;
+	vector<FLOAT> MatchNPCsDist2;
+	vector<FLOAT> MatchNPCsDist3;
 	vector<DWORD64> MatchNPCsMBlock;
+	vector<DWORD64> MatchNPCsMBlock2;
+	//vector<BYTE> State,State2;
 	FFPOINT p = PlayerCoordFloatRaw();
 	DWORD hover;
 	DWORD hover2;
@@ -7540,50 +7593,61 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
 			for (DWORD ii = 0; ii < npc.size(); ii++) {
 				for (DWORD i = 0; i < NPCID.size(); i++) {
 					if (npc[ii] != NULL || NPCID[i] != NULL) {
-						if (NPCID[i] == npc[ii]) {
-							FLOAT dist = sqrt(pow(NPCX[i] - p.x, 2) + pow(NPCY[i] - p.y, 2));
-							if (dist < maxdistance*512.f) { 
+						if (NPCID[i] == npc[ii]) {                                  //give some uniqueness
+							FLOAT dist = sqrt(pow(NPCX[i] - p.x, 2) + pow(NPCY[i] - p.y, 2)) + (0.001f*i);
+							if (dist < maxdistance*512.f) {
 								MatchNPCsDist.push_back(dist);
+								MatchNPCsDist2.push_back(dist);
 								MatchNPCsMBlock.push_back(NPCMem[i]);
+								//State.push_back(NPCstate[i]);
 							}
 						}
 					}
 				}
 			}
+			//sort first dist by distance size
+			if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
+				sort(MatchNPCsDist.begin(), MatchNPCsDist.end());
 
-					//smallest distance
-					if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
-						for (DWORD i = 0; i < MatchNPCsMBlock.size(); i++) {
-							if (MatchNPCsDist[i] < min) {
-								if (MatchNPCsDist[i] >= 0.f && MatchNPCsDist[i] < 51200.f) {
-									min = MatchNPCsDist[i];
-								}
+				//set memory blocks into order by dist and dist2
+				for (DWORD i = 0; i < MatchNPCsDist.size(); i++) {
+					for (DWORD ii = 0; ii < MatchNPCsDist2.size(); ii++) {
+						if (MatchNPCsDist[i] == MatchNPCsDist2[ii]) {
+							//should add closest memory block @ 0(first)
+							MatchNPCsMBlock2.push_back(MatchNPCsMBlock[i]);
+							MatchNPCsDist3.push_back(MatchNPCsDist2[ii]);
+							//State2.push_back(State[i]);
+						}
+					}
+				}
+			}
+
+			//pullout the smallest//click if hover
+			if (!MatchNPCsMBlock2.empty()) {
+				//should loop until founds object that isn't under interfaces or until plan b
+				for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
+					//distance check 7 tiles seems reasonable
+					if (MatchNPCsDist3[i]<8.f*512.f) {
+					WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + npcoffxm),VirtPReadWord(MatchNPCsMBlock2[i] + npcoffym) };
+					screenp.y = resyy - screenp.y;
+						//interface filter
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + corx + resxl;
+							screenp.y = screenp.y - 7 + cory + resyt;
+							MoveMouse(screenp.x, screenp.y, 14, 20);
+							hover = VirtPReadDword(MatchNPCsMBlock2[i] + npcoff111);
+							RandomSleep2(100, 200);
+							hover2 = VirtPReadDword(MatchNPCsMBlock2[i] + npcoff111);
+							if (hover != hover2) {
+								mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+								RandomSleep2(800, 2000);
+								mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+								return TRUE;
 							}
 						}
 					}
-
-			//pullout the smallest//click if hover
-			if (!MatchNPCsMBlock.empty() && !MatchNPCsDist.empty()) {
-				for (DWORD i = 0; i < MatchNPCsMBlock.size();i++) {
-					if (min == MatchNPCsDist[i]) {
-						if (MatchNPCsDist[i]<(6.f*512.f)) {						
-							WPOINT screenp ={ VirtPReadWord(MatchNPCsMBlock[i] + npcoffxm),VirtPReadWord(MatchNPCsMBlock[i] + npcoffym) };
-							screenp.y = resyy - screenp.y;
-							if (ScreenFilter(screenp)) {
-								screenp.x = screenp.x - 7 + corx + resxl;
-								screenp.y = screenp.y - 7 + cory + resyt;
-								MoveMouse(screenp.x, screenp.y, 14, 20);
-								hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-								RandomSleep2(100, 200);
-								hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-								if (hover != hover2) {
-									mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-									RandomSleep2(800, 2000);
-									mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-									return TRUE;
-								}
-							}
-						}
+				}
+					/*plan b
 						else
 						{
 							WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + npcoff22) - 256.f });
@@ -7591,18 +7655,16 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance,INT corx, INT cory) {
 								screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
 								MoveMouse(screenp.x, screenp.y, 4, 4);
 								RandomSleep2(200, 2000);
-									mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-									RandomSleep2(200, 1000);
-									mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-									return TRUE;
+								mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+								RandomSleep2(200, 1000);
+								mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+								return TRUE;
 							}
 						}
-
+                     */
 					}
 				}
 			}
-		}
-	}
 	return FALSE;
 }
 
@@ -8405,7 +8467,7 @@ FFPOINT GetSlot( INT slot ) {
 
 	if (InvBoxMemoryLoc == 0) {
 		cout << "invboxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" << "\n";
-		InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19);
+		InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44);
 	}
 	else {
 		FFPOINT temp = GetInterfaceData(InvBoxMemoryLoc).xys;
@@ -8520,7 +8582,7 @@ FFPOINT GetsrealSlotForLoot(INT slot) {
 
 	if (InvBoxMemoryLoc == NULL) {
 		// it seems main thing part is 2xffff end
-		InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19);
+		InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44);
 	}
 	else {
 		//active check
@@ -8532,10 +8594,10 @@ FFPOINT GetsrealSlotForLoot(INT slot) {
 		WORD bb8 = VirtPReadWord(InvBoxMemoryLoc + Ioff55 + 6);
 		WORD bb9 = VirtPReadWord(InvBoxMemoryLoc + Ioff55 + 8);
 		//check if interface is still in same place
-		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 104 && bb8 == 0xffff && bb9 == 19)) {
+		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 107 && bb8 == 0xffff && bb9 == 44)) {
 		}
-		else { InvBoxMemoryLoc = Locateinterface(1477, 104, 0xffff, 19); }
-		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 104 && bb8 == 0xffff && bb9 == 19)) {
+		else { InvBoxMemoryLoc = Locateinterface(1477, 107, 0xffff, 44); }
+		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 1477 && bb7 == 107 && bb8 == 0xffff && bb9 == 44)) {
 			FFPOINT start = GetInterfaceData(InvBoxMemoryLoc).xy;
 			FFPOINT sl = GetSlot(slot);
 			FFPOINT p;
@@ -8584,17 +8646,17 @@ POINT TToMap(POINT spot) {
 }
 
 //finds inv stuff
-FFPOINT InvFindItem(DWORD item) {
+WPOINT InvFindItem(DWORD item) {
 
 	FilterInventory();
 	if (!InvId.empty()) {		
 		for (DWORD i = 0; i < InvId.size(); i++) {
 			if (InvId[i] == item) {
-				return{ Invx[i],Invy[i],0 };
+				return{ Invx[i],Invy[i]};
 			}
 		}
 	}
-	return{ 0,0,0 };
+	return{ 0,0 };
 }
 
 BOOLEAN ClickInv_(DWORD item) {
@@ -8610,9 +8672,9 @@ BOOLEAN ClickInv_(DWORD item) {
 	}
 	else
 	{
-		FFPOINT screenp = InvFindItem(item);
+		WPOINT screenp = InvFindItem(item);
 		//cout << resxl << ":" << resyt << endl;
-		if (screenp.x != 0 && screenp.y != 0 && screenp.x < 4000.f && screenp.y < 4000.f) {
+		if (screenp.x != 0 && screenp.y != 0 && screenp.x < 4000 && screenp.y < 4000) {
 			screenp.x = screenp.x - 7 + resxl; screenp.y = screenp.y - 7 +  resyt;
 			MoveMouse(screenp.x, screenp.y, 14, 20);
 			RandomSleep();
@@ -8761,32 +8823,18 @@ BYTE Invfreecount() {
 //Bank open check
 BOOLEAN BankOpen_() {
 
-	if (BankTemp == NULL) {
-		// it seems main thing part is 2xffff end
-		BankTemp = Locateinterface(762, 3, 0xffff, 2);
-		cout << "bankopen:" << hex << BankTemp << endl;
+	FFPOINT size;
+	if (InterfCheck(BankTemp, 762, 3, 0xffff, 2)) {
+		size = GetInterfaceData(BankTemp).xys;
 	}
 	else {
-		//active check
-		DWORD bb3 = VirtPReadDword(BankTemp + Ioff555);
-		DWORD bb4 = VirtPReadDword(BankTemp + Ioff666);
-		//ids
-		WORD bb5 = VirtPReadWord(BankTemp + Ioff55);
-		WORD bb7 = VirtPReadWord(BankTemp + Ioff55 + 4);
-		WORD bb8 = VirtPReadWord(BankTemp + Ioff55 + 6);
-		WORD bb9 = VirtPReadWord(BankTemp + Ioff55 + 8);
-		//check if interface is still in same place
-		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 762 && bb7 == 3 && bb8 == 0xffff && bb9 == 2)) {
-		}
-		else { BankTemp = Locateinterface(762, 3, 0xffff, 2); }
-		if ((bb3 > 0 && bb3 < 4) && (bb4 > 0 && bb4 < 3) && (bb5 == 762 && bb7 == 3 && bb8 == 0xffff && bb9 == 2)) {
-		FFPOINT size = GetInterfaceData(BankTemp).xys;
+		BankTemp = Locateinterface(762, 3, 0xffff, 2);
+		size = GetInterfaceData(BankTemp).xys;
+	}
 		//bank inventory part, if its open its size should be shown
 		if (size.x != 0 && size.y != 0) {
 			return TRUE;
 		}
-	}
-}
 	return FALSE;
 }
 
@@ -9215,7 +9263,7 @@ VOID LSA1() {
 		
 		if (SL == NULL || HP==NULL || R5 == 1) {
 			R5 = 0;
-			 RefVarpBits1();
+			 //RefVarpBits1();
 			//SL=RefSlrepoints()[0];
 		}
 		/*
@@ -9815,6 +9863,7 @@ int GetFloorLv_2(){
 	return 9999;
 }
 
+//not working
 int GetMouseID_(){
 	
 	DWORD64 hackOffset1 = 0xc0;
@@ -9840,38 +9889,6 @@ int GetMouseID_(){
 		}
 	}
 	return 0;
-}
-
-BOOLEAN OpenApp(DWORD pid)
-{
-	HProc = OpenProcess(PROCESS_VM_READ, 0, pid);
-	if (HProc == NULL)
-	{
-		cout << ("Cant open Process!" "\n");
-	}
-	else {
-		cout << "Process opened" "\n";
-		//ClientBase = dwGetModuleBaseAddress(pid, "rs2client.exe");
-
-		//printf("rs2client.exe: %lX\n", ClientBase);
-		return true;
-	}
-	return false;
-}
-
-BOOLEAN FindAppEx(HWND WindowHandle)
-{
-	DWORD PID = 0;
-	if (GetWindowThreadProcessId(WindowHandle, &PID))
-	{
-		if (PID) {
-			cout << "PID: " << PID << "\n";
-			OpenApp(PID);			
-			return true;
-		}
-	}
-	cout << ("Could not find ID" "\n");
-	return false;
 }
 
 //Finds rs window otherway
@@ -9906,6 +9923,30 @@ BOOL CALLBACK FindWindows2(HWND handle, LPARAM option)
 	return TRUE;
 }
 
+VOID TESTPROG(){
+	vector<ptr_t> basevsoffset;
+	static  DWORD_PTR    NPC_TABLE = 0x6E3018;
+	static  DWORD64 NPC_TABLE2 = 0x6E3018;
+	static  DWORD_PTR NPC_VTABLE = 0x52D370;
+
+	DWORD64 npcTableAddress = (RSExeStart + NPC_TABLE);
+	basevsoffset.push_back(RSExeStart);
+	basevsoffset.push_back(NPC_TABLE);
+	//uintptr_t npcVTableAddress = ;
+	uintptr_t numBytesRead;
+	uintptr_t npcTablePointer;
+	DWORD64 buffer = 0;
+	//ReadProcessMemory(HProc, npcTableAddress, &buffer, 8, NULL);
+	//proc.remote().memory().Read(basevsoffset, sizeof(DWORD64), &buffer);
+    //DWORD64	Read = VirtPRead64((void*)npcTableAddress);
+
+	//cout <<hex<< buffer << endl;
+	//cout <<hex<< &npcTableAddress << endl;
+
+
+
+
+}
 
 VOID FindRS()
 {
@@ -9959,14 +10000,14 @@ BOOLEAN CheckRS3()
 
 BOOLEAN FindRS3()
 {    
-	HMODULE hMod[200];
-	DWORD cbNeeded;
-	TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
-	DWORD cProcesses;
-	MODULEINFO moduleInfo;
-	ZeroMemory(&moduleInfo, sizeof(moduleInfo));
-	char lpFilename[MAX_PATH];
-	char lpBaseName[MAX_PATH];
+	//HMODULE hMod[200];
+	//DWORD cbNeeded;
+	//TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+	//DWORD cProcesses;
+	//MODULEINFO moduleInfo;
+	//ZeroMemory(&moduleInfo, sizeof(moduleInfo));
+	//char lpFilename[MAX_PATH];
+	//char lpBaseName[MAX_PATH];
 	cout << ("Trying to find NXT" "\n");
 	//lets clean old procIDs
 	procIDs.clear();
@@ -9983,12 +10024,40 @@ BOOLEAN FindRS3()
 		HPid=proc.pid();
 		cout << "Pid:" << HPid << "\n";
 		
+		const ModuleData*  RS3Maindata = proc.modules().GetMainModule();
+		RSExeStart = RS3Maindata->baseAddress;
+		RSExeSize = RS3Maindata->size;
+		RSExeFile = Utils::WstringToUTF8(RS3Maindata->fullPath);
+		cout << "Name:" << Utils::WstringToUTF8(RS3Maindata->name) << " ";
+		cout << "Path:" << RSExeFile << " ";
+		cout << "Base:" << hex << RSExeStart << " ";
+		//cout << hex << RS3Maindata->manual << endl;
+		cout <<"Size:"<< hex << RSExeSize << endl;
+		//cout << hex << RS3Maindata->type << endl;
+
+		/* not needed
+		const ProcessModules::mapModules  RS3Maindata2 = proc.modules().GetAllModules();
+		//well this was confusing, but i IS current data
+		for (auto i = RS3Maindata2.begin(); i != RS3Maindata2.end();++i) {
+			cout << "Name:" << Utils::WstringToUTF8(i->second.name) << " ";
+			cout << "Path:" << Utils::WstringToUTF8(i->second.fullPath) << " ";
+			cout << "Start:" << hex << i->second.baseAddress << " ";
+			cout << "Manual:" << hex << i->second.manual << " ";
+			cout << "Size:" <<hex << i->second.size << " ";
+			cout << "Type" << hex << i->second.type << endl;
+		}
+
+
+
+
+
+		/* winz
 		//first thing loaded is rs exe no need to go further
 		if (EnumProcessModules(HProc, hMod, sizeof(hMod),
 			&cbNeeded))
 		{					
 
-			//dno logic behind it
+			//winapi thing//old
 			cProcesses = cbNeeded / sizeof(DWORD)/2;
 				for (DWORD i = 0; i < cProcesses; i++)
 				{
@@ -10006,16 +10075,17 @@ BOOLEAN FindRS3()
 						RSExeFile = lpFilename;
 						cout << "exe loc in memory: " << hex << RSExeStart << "\n";
 					}
-					/*
-					string text = szProcessName;
-					if (text.find("SHELL32.dll") != string::npos){
-						SHELL32Start = (DWORD64)hMod[i];
-						SHELL32Size = moduleInfo.SizeOfImage;
-					}
-					*/ 
+					
+					//string text = szProcessName;
+					//if (text.find("SHELL32.dll") != string::npos){
+					//	SHELL32Start = (DWORD64)hMod[i];
+					//	SHELL32Size = moduleInfo.SizeOfImage;
+					//}
+					 
 				}
 
 		}
+        */
 		EnumWindows(FindWindows, 0);
 		EnumChildWindows(WProc, FindWindows2, 0);
 		FindRS();
@@ -10512,10 +10582,10 @@ int StartGraphicOverlay()
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 190.f), ImColor(0, 255, 0, 255), to_string(GetHP()).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 200.f), ImColor(0, 255, 255, 255), "Pray:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 200.f), ImColor(0, 255, 0, 255), to_string(GetPray()).c_str(), 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 210.f), ImColor(0, 255, 255, 255), "Adre:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 210.f), ImColor(0, 255, 0, 255), to_string(GetAdr()).c_str(), 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 220.f), ImColor(0, 255, 255, 255), "Slay:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 220.f), ImColor(0, 255, 0, 255), to_string(GetSlay()).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 210.f), ImColor(0, 255, 255, 255), "Sidetest:", 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 210.f), ImColor(0, 255, 0, 255),  FindSideText().c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 220.f), ImColor(0, 255, 255, 255), "IFilter:", 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 220.f), ImColor(0, 255, 0, 255), to_string(InterfAdd).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 230.f), ImColor(0, 255, 255, 255), "PMoving:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 230.f), ImColor(0, 255, 0, 255), to_string(ReadPlayerMovin()).c_str(), 0, 0.0f, 0);
 
@@ -10706,7 +10776,7 @@ int StartGraphicOverlay()
 				 
 
 				
-				
+				TESTPROG();
 				//cout <<hex<< InvBoxMemoryLoc << endl;
 			//	FindInterfAll();
 				//MarkupMem(LocalPlayer,LocalPlayer+5000000);
@@ -10716,7 +10786,7 @@ int StartGraphicOverlay()
 				//binary_to_compressed_c("C:\\ProggyTiny.ttf", "ProggyTiny", TRUE, TRUE);
 				//ScanTest1();
 				//ScanTest2();
-				//key4 = FALSE;	
+				key4 = FALSE;	
 				//test();
 				//Searchtest(385);
 				//SearchCompass();
@@ -10972,18 +11042,19 @@ int StartGraphicOverlay()
 				}
 				if (!NPCX.empty()) {
 					for (DWORD i = 0; i < NPCX.size(); i++) {
-						//cout << PlX.size() << endl;
-						DWORD off44 = 0xc;
-						//player filter
-							//if (PlID[i] < 0xffff && GetAsyncKeyState(VK_INSERT)) {
-								//local player filter
-								//if (VirtPReadByte(PlMem[i] + off44) != 6) {
+						//if (NPCstate[i]==2) {
+							//cout << PlX.size() << endl;
+							DWORD off44 = 0xc;
+							//player filter
+								//if (PlID[i] < 0xffff && GetAsyncKeyState(VK_INSERT)) {
+									//local player filter
+									//if (VirtPReadByte(PlMem[i] + off44) != 6) {
 
 
-						if (!key13) {
-							stringstream stream;
-							stream << hex << NPCMem[i];
-							string result(stream.str());
+							if (!key13) {
+								stringstream stream;
+								stream << hex << NPCMem[i];
+								string result(stream.str());
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i] - 50.f, NPCymid[i] + 10.f), ImColor(0, 255, 0, 255), "MemLoc:", 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 10.f), ImColor(0, 255, 0, 255), result.c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i] - 50.f, NPCymid[i]), ImColor(0, 255, 0, 255), "Name:", 0, 0.0f, 0);
@@ -10994,30 +11065,31 @@ int StartGraphicOverlay()
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] - 10.f), ImColor(0, 255, 0, 255), to_string((NPCLife[i])).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] - 30.f), ImColor(0, 255, 0, 255), to_string((NPCAnim[i])).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(NPCxmid[i], NPCymid[i]), 2, ImColor(255, 0, 0, 255));
-							
-						}
-						else {
-									//ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxstart[i], NPCymid[i]), ImVec2(NPCxend[i], NPCymid[i]), ImColor(255, 0, 0, 255), 1.f);
-									//ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i], NPCystart[i]), ImVec2(NPCxmid[i], NPCyend[i]), ImColor(255, 0, 0, 255), 1.f);
 
-										ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
-										ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
-										ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
-										ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
+							}
+							else {
+								//ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxstart[i], NPCymid[i]), ImVec2(NPCxend[i], NPCymid[i]), ImColor(255, 0, 0, 255), 1.f);
+								//ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i], NPCystart[i]), ImVec2(NPCxmid[i], NPCyend[i]), ImColor(255, 0, 0, 255), 1.f);
 
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 60.f), ImColor(0, 255, 0, 255), to_string((NPCxstart[i])).c_str(), 0, 0.0f, 0);
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 50.f), ImColor(0, 255, 0, 255), to_string((NPCxend[i])).c_str(), 0, 0.0f, 0);
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 80.f), ImColor(0, 255, 0, 255), to_string((NPCystart[i])).c_str(), 0, 0.0f, 0);
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 70.f), ImColor(0, 255, 0, 255), to_string((NPCyend[i])).c_str(), 0, 0.0f, 0);
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 90.f), ImColor(0, 255, 0, 255), to_string((NPCxmid[i])).c_str(), 0, 0.0f, 0);
-										//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 100.f), ImColor(0, 255, 0, 255), to_string((NPCymid[i])).c_str(), 0, 0.0f, 0);
-									}
+								ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
+								ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
+								ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] + NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
+								ImGui::GetWindowDrawList()->AddLine(ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] - NPCysize[i] / 2), ImVec2(NPCxmid[i] - NPCxsize[i] / 2, NPCymid[i] + NPCysize[i] / 2), ImColor(255, 0, 255, 255), 1.f);
+
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 60.f), ImColor(0, 255, 0, 255), to_string((NPCxstart[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 50.f), ImColor(0, 255, 0, 255), to_string((NPCxend[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 80.f), ImColor(0, 255, 0, 255), to_string((NPCystart[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 70.f), ImColor(0, 255, 0, 255), to_string((NPCyend[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 90.f), ImColor(0, 255, 0, 255), to_string((NPCxmid[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 100.f), ImColor(0, 255, 0, 255), to_string((NPCymid[i])).c_str(), 0, 0.0f, 0);
+							}
 
 
 
 
 							//	}
 							//}				
+						//}
 					}
 				}
 			}
@@ -11153,7 +11225,7 @@ int StartGraphicOverlay()
 			}
 
 			//Main INTEREFaces 1477
-			if (GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_F11)) {
+			if (GetAsyncKeyState(VK_CONTROL) && !GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F11)) {
 				if (key28 == TRUE) { key28 = FALSE; Sleep(200); }
 				else { if (key28 == FALSE) { key28 = TRUE; Sleep(200); } }
 			}
@@ -11168,13 +11240,36 @@ int StartGraphicOverlay()
 						//DWORD64 placeholder = VirtPRead64(InterfMem[i] + 0x3e8);
 						//timer!!
 						//DWORD OtherT = VirtPReadDword(placeholder + 0x158);
-						if (InterfID[i] == 1477
-							//&&
+						//762 bank
+						//1218 13 ffff ffff skill guide
+						//1253 0 ffff ffff treasure hunter open
+						//1048 31 ffff 0 log out ask
+						// lootbox open 1622 4 ffff ffff
+						if (GetAsyncKeyState(VK_ADD)) { 							
+							InterfAdd = InterfAdd + 1; 
+							Sleep(200);
+						}
+						if (GetAsyncKeyState(VK_SUBTRACT)) {
+							InterfAdd = InterfAdd - 1; 
+							Sleep(200);
+						}
+						if (
+							//(InterfID[i] == InterfAdd 
+							//&& InterfID[i] < InterfAdd+100
+							//)
+							//&& InterfID2[i] == 31
+							//&& InterfID4[i] == 65535
+						    // &&
 							//InterfHov[i] == 1
 							//&&
 							//InterfID2[i] <60
 							//&&
 							//InterfTimer[i]!= OtherT
+							//&&
+							//InterfAct[i] == TRUE
+							//InterfID12[i] == 1477
+							//&&
+							InterfID4[i] == 813
 							) {
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i], InterfY[i]), ImColor(0, 255, 0, 255), InterName[i].c_str(), 0, 0.0f, 0);
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i]-50.f, InterfY[i] - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
@@ -11200,7 +11295,7 @@ int StartGraphicOverlay()
 			}
 
 			//Secondary INTEREFaces
-			if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F11)) {
+			if (!GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F11)) {
 				if (key22 == TRUE) { key22 = FALSE; Sleep(200); }
 				else { if (key22 == FALSE) { key22 = TRUE; Sleep(200); } }
 			}
@@ -11211,9 +11306,25 @@ int StartGraphicOverlay()
 				///cout << "ex2:" << dec << InterfID.size() << "\n";
 				if (!InterfID12.empty()) {
 					for (DWORD i = 0; i < InterfID12.size(); i++) {
-						//hovering filter
-						if (InterfHov2[i]==1
-							//&& (InterfID42[i] == 5)
+						if (GetAsyncKeyState(VK_ADD)) {
+							InterfAdd = InterfAdd + 50;
+							Sleep(200);
+						}
+						if (GetAsyncKeyState(VK_SUBTRACT)) {
+							InterfAdd = InterfAdd - 50;
+							Sleep(200);
+						}
+						if (
+							//InterfHov2[i]==1
+							//&& 
+							//InterfAct2[i]==TRUE
+							//
+							//&&
+							//(InterfID12[i] > InterfAdd && InterfID12[i] < InterfAdd+50)
+							//InterfID12[i] == 1477
+							InterfID22[i] == 815
+							//&&
+							//InterfID42[i] == 813
 							) {
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX2[i], InterfY2[i]), ImColor(0, 255, 0, 255), InterName2[i].c_str(), 0, 0.0f, 0);
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX2[i]-50.f, InterfY2[i] - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);

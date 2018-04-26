@@ -17,7 +17,7 @@ char* PascalExports[] =
 	//(char*)"FindNPCs2", (char*)"Function FindNPCs2(id:array of Int32;size,d:Byte;h:Int32): Boolean;",
 	//(char*)"FindNPCs3", (char*)"Function FindNPCs3(id:array of Int32;size,d:Byte;spot:Tpoint): Boolean;",
 	//(char*)"FindNPCs4", (char*)"Function FindNPCs4(id:array of Int32;size,d:Byte;h:Int32;spot:Tpoint): Boolean;",
-	//(char*)"ReadUpTxt", (char*)"Function ReadUpTxt(x:string): Boolean;",
+	(char*)"ReadUpTxt", (char*)"Function  ReadUpTxt(x:string): Boolean;",
 	(char*)"GetPAnimation", (char*)"Function GetPlayerAnimation(): Int32;",
 	//(char*)"TileToScreen", (char*)"Function TileToScreen(x:Tpoint): Tpoint;",
 	//(char*)"TileToMap", (char*)"Function TileToMap(x:Tpoint): Tpoint;",
@@ -48,13 +48,52 @@ char* PascalExports[] =
 	(char*)"ReadNPCInFocusTilexy", (char*)"Function ReadNPCInFocusTilexy(): Tpoint;",
 	(char*)"ReadNPCInFocusScreenxy", (char*)"Function ReadNPCInFocusScreenxy(): Tpoint;",
 	(char*)"ReadNPCInFocusHealth", (char*)"Function ReadNPCInFocusHealth(): Int32;",
-	(char*)"ReadNPCInFocusAnim", (char*)"Function ReadNPCInFocusAnim(): Int32;"
-	//(char*)"ReadInterface", (char*)"Function ReadInterface(Item:Int32): TRect;"
+	(char*)"ReadNPCInFocusAnim", (char*)"Function ReadNPCInFocusAnim(): Int32;",
+	(char*)"ReadInterface", (char*)"Function ReadInterface(id1,id2,id3,id4:Int32): TRect;",
+	(char*)"ReadVarpBit", (char*)"Function ReadVarpBit(id:Int32): Int32;"
 
 };
 
 static const DWORD PascalExportCount = sizeof(PascalExports) / (sizeof(PascalExports[0]) * 2);
 
+
+typedef char* SimbaString;
+extern "C" __declspec(dllexport) BOOLEAN ReadUpTxt(SimbaString str) {
+	//direct = works too
+	size_t len = strlen(str);
+	if (len > 0) {
+		string s = string(str, len);
+		string f = FindSideText();
+		if (s.length()>0 && f.length()>0) {
+			if (f.find(s) != string::npos) {
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+
+extern "C"  __declspec(dllexport) DWORD ReadVarpBit(WORD id)
+{
+	
+	return FindVarBit(id);
+}
+
+extern "C"  __declspec(dllexport) RECT ReadInterface(WORD id1, WORD id2, WORD id3, WORD id4)
+{
+	RECT rectangle;
+	DWORD64 TempMemoryLoc;
+	TempMemoryLoc = Locateinterface(id1, id2, id3, id4);
+	if (TempMemoryLoc != NULL) {
+		InterfaceComp2 data = GetInterfaceData2(TempMemoryLoc);
+		//lets make a rectangle
+		rectangle.top = data.xy.y;
+		rectangle.bottom = data.xy.y + data.xys.y;
+		rectangle.left = data.xy.x;
+		rectangle.right = data.xy.x + data.xys.x;
+	}
+	return{ rectangle };
+}
 
 extern "C"  __declspec(dllexport) POINT ReadNPCInFocusTilexy()
 {
@@ -131,13 +170,28 @@ extern "C"  __declspec(dllexport) BOOLEAN FindAobj(DWORD* obj, BYTE size, BYTE d
 	return  FindAObj(objectsArray, d,corx,cory,action);;
 }
 
-extern "C"  __declspec(dllexport) BOOLEAN FindDobj(DWORD* obj, BYTE size, BYTE d, INT corx, INT cory, BYTE action)
+//typedef vector<DWORD> SimbaArray;
+//DWORD Simb[99] = { 10, 20, 30 }; ;
+//typedef DWORD SimbaArray[];
+typedef DWORD SimbaArray[];
+//SimbaArray ob= {};
+extern "C"  __declspec(dllexport) BOOLEAN FindDobj(DWORD* obj , BYTE size, BYTE d, INT corx, INT cory, BYTE action)
 {
+	//cout <<dec<< obj[0] << endl;
+	//cout <<dec<< obj[1] << endl;
+	//cout << dec << obj[2] << endl;
+	//cout << dec << obj[3] << endl;
+	//cout << dec << obj[4] << endl;
+	//cout << dec << obj[5] << endl;
+	//cout << dec << obj[6] << endl;
+	// << dec << obj[7] << endl;
+	//cout << dec << obj[8] << endl;
 	vector<DWORD> objectsArray;
 	for (DWORD i = 0; i < size; i++) {
 		objectsArray.push_back(obj[i]);
 	}
-	return  FindDObj(objectsArray, d, corx, cory, action);;
+	return  FindDObj(objectsArray, d, corx, cory, action);
+	return TRUE;
 }
 
 extern "C"  __declspec(dllexport) VOID MouseDrag(POINT p, POINT p2)
@@ -282,11 +336,6 @@ extern "C" int __declspec(dllexport) SetupRSReading(BOOLEAN HookB, BOOLEAN OverL
 	return Start(HookB, OverLayB);
 }
 
-extern "C" int __declspec(dllexport) SetupAppReading(HWND WindowHandle)
-{
-	return FindAppEx(WindowHandle);
-}
-
 extern "C" int __declspec(dllexport) GetPFloorLv()
 {
 	return GetFloorLv_2();
@@ -297,23 +346,10 @@ extern "C" int __declspec(dllexport) GetPAnimation()
 	return ReadPlayerAnim();
 }
 
-extern "C"  __declspec(dllexport) int ReadUpTxt(char* chars)
-{	
-	string txt = chars;
-	string txt2 = ReadUpText();
-	cout << txt <<"\n";
-	cout << txt2 << "\n";
-	if (txt2.find(txt) != string::npos) {
-	//if (txt.compare(txt2)==0) {
-		return true;
-	}
-	return  false;
-}
-
 extern "C"  __declspec(dllexport) POINT InvItem(DWORD obj)
 {
 	POINT p;
-	FFPOINT fp = InvFindItem(obj);
+	WPOINT fp = InvFindItem(obj);
 	p.x = fp.x;
 	p.y = fp.y;
 	return p;
