@@ -169,68 +169,91 @@ WORD I3off666 = 0xc;
 WORD I3timeroff = 0x3e8;
 ////////////////activobjects//////////////////////////////////////////////////////////////////////
 //dif//step
-DWORD aooff2 = 0x300;
+WORD aooff2 = 0x300;
 //y
-DWORD aooff11 = 0x15c;
+WORD aooff11 = 0x15c;
 //x
-DWORD aooff22 = 0x160;
+WORD aooff22 = 0x160;
 //ids
-DWORD aooff33 = 0x198;
+WORD aooff33 = 0x198;
 //ids unique
-DWORD aooff44 = 0x118;
+WORD aooff44 = 0x118;
 //choped down boolean
-DWORD aooff77 = 0x17d;
+WORD aooff77 = 0x17d;
 //activ
-DWORD aooff55 = 0x8;
-DWORD aooff66 = 0xc;
+WORD aooff55 = 0x8;
+WORD aooff66 = 0xc;
 //xm
-DWORD aooffxm = 0x88;
+WORD aooffxm = 0x88;
 //ym
-DWORD aooffym = 0x8c;
+WORD aooffym = 0x8c;
 //xs
-DWORD aooffxs = 0x80;
+WORD aooffxs = 0x80;
 //ys
-DWORD aooffys = 0x90;
+WORD aooffys = 0x90;
 ///////////decorobj//////////////////////////////////////////////////////////////
 //dif//step
 DWORD dooff2 = 0x138;
 //y
-DWORD dooff11 = 0x10c;
+WORD dooff11 = 0x10c;
 //x
-DWORD dooff22 = 0x110;
+WORD dooff22 = 0x110;
 //ids
-DWORD dooff33 = 0x118;
+WORD dooff33 = 0x118;
 //ids other array
-DWORD dooff44 = 0x40;
+WORD dooff44 = 0x40;
 //activ
-DWORD dooff55 = 0x8;
-DWORD dooff66 = 0xc;
+WORD dooff55 = 0x8;
+WORD dooff66 = 0xc;
 //xm
-DWORD dooffxm = 0x88;
+WORD dooffxm = 0x88;
 //ym
-DWORD dooffym = 0x8c;
+WORD dooffym = 0x8c;
 ///////////grounditems/////////////////////////////////////////////////////////////////
-DWORD goff2 = 0x9a0;
+WORD goff2 = 0x9a0;
 //x
-DWORD goff11 = 0x98C;
+WORD goff11 = 0x98C;
 //y
-DWORD goff22 = 0x994;
+WORD goff22 = 0x994;
 //to id
-DWORD goff33 = 0x130;
+WORD goff33 = 0x130;
 // floor
-DWORD goff5 = 0x98C - 0x4;
+WORD goff5 = 0x98C - 0x4;
 //xmid
 WORD goffxm = 0x88;
 //ymid
 WORD goffym = 0x8c;
 // activ
-DWORD goff6 = 0x8;
+WORD goff6 = 0x8;
 // activ
-DWORD goff7 = 0xc;
+WORD goff7 = 0xc;
 //other arr id 
-DWORD gotherid = 0x20;
+WORD gotherid = 0x20;
 //other arr am
-DWORD gotheram = 0x24;
+WORD gotheram = 0x24;
+///////////////allobj////////////////////////////////////////////////////////////////
+//start
+WORD alloff1 = 0x70;
+//step
+WORD alloff2 = 0x1d0;
+//y
+WORD alloff11 = 0x30;
+//x
+WORD alloff22 = 0x38;
+//crc32
+WORD alloff44 = 0x60;
+//type
+WORD alloff55 = 0x198;
+//screen timer partial
+WORD alloff66 = 0x1a4;
+//on screen fully bool
+WORD alloff77 = 0x1c5;
+//backto all
+WORD alloff88 = 0x58;
+
+
+
+
 
 
 

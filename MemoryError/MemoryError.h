@@ -37,7 +37,7 @@
 #include <random>
 #include <fstream>
 #include "MD5.h"
-
+#include <bitset>
 
 
 
@@ -97,6 +97,11 @@ struct MEMss {
 	DWORD64 size;
 };
 
+//for varpbits
+struct VB {
+	DWORD state;
+	DWORD64 addr;
+};
 
 // keyboard hooky
 static HHOOK _hook;
@@ -147,8 +152,8 @@ FFPOINT TileToMouseTest22(FFPOINT);
 BOOLEAN FindSObj(vector<DWORD>, BYTE);
 WPOINT InvFindItem(DWORD);
 BOOLEAN FindGItemBool_(vector<DWORD>);
-BOOLEAN FindGItem_(vector<DWORD>, BYTE, INT, INT);
-BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT);
+BOOLEAN FindGItem_(vector<DWORD>, BYTE, INT, INT, BYTE, string);
+BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT, BYTE, string);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,DWORD);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT,DWORD);
@@ -174,8 +179,8 @@ BOOLEAN InvFull();
 BYTE Invfreecount();
 BOOLEAN ReadPlayerMovin();
 //BOOLEAN ClickTile_(POINT);
-BOOLEAN FindAObj(vector<DWORD>, BYTE,INT,INT, BYTE);
-BOOLEAN FindDObj(vector<DWORD>, BYTE, INT, INT,BYTE);
+BOOLEAN FindAObj(vector<DWORD>, BYTE,INT,INT, BYTE, string);
+BOOLEAN FindDObj(vector<DWORD>, BYTE, INT, INT,BYTE, string);
 POINT MousePos_();
 VOID MouseDrag_RS(POINT, POINT);
 VOID MouseMove_(POINT);
@@ -201,9 +206,13 @@ DWORD64 FindLP();
 BOOLEAN FindNPCLock_(vector<DWORD>, BYTE);
 NPCFOCUS ReadNPCInFocus_();
 BOOLEAN NPCFocusClick_(BYTE);
-DWORD FindVarBit(WORD);
+VB FindVarBit(WORD);
+WORD GetBitsValue1(WORD);
+VB ReadBits(DWORD64);
+VOID GetBits(WORD);
 string FindSideText();
-
+BOOLEAN SideTextEq(string);
+VOID ReadCObjArrays();
 
 
 // File: 'C:\ProggyTiny.ttf' (35656 bytes)
@@ -293,3 +302,5 @@ static const char* GetDefault2CompressedFontDataTTFBase85()
 {
 	return ProggyTiny_compressed_data_base85;
 }
+
+WORD GetPray();
