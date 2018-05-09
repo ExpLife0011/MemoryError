@@ -213,6 +213,10 @@ VOID GetBits(WORD);
 string FindSideText();
 BOOLEAN SideTextEq(string);
 VOID ReadCObjArrays();
+WORD GetPray_();
+WORD GetPrayMax_();
+WORD GetHP_();
+WORD GetHPMax_();
 
 
 // File: 'C:\ProggyTiny.ttf' (35656 bytes)
@@ -302,5 +306,3 @@ static const char* GetDefault2CompressedFontDataTTFBase85()
 {
 	return ProggyTiny_compressed_data_base85;
 }
-
-WORD GetPray();

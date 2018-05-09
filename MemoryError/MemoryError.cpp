@@ -80,6 +80,7 @@ vector<FLOAT> ObjectsYfd;
 vector<DWORD> ObjectsIDd;
 vector<DWORD> ObjectsIDd2;
 vector<DWORD64> ObjectsIDd3;
+vector<string> ObjectsName;
 ////////////////////////////
 vector<FLOAT> ObjX;
 vector<FLOAT> ObjY;
@@ -104,6 +105,8 @@ vector<DWORD> DecorID;
 vector<WORD>Decorxmid;
 vector<WORD>Decorymid;
 vector<DWORD64> DecorMem;
+vector<string> DecorName;
+////////////////////////////
 vector<FLOAT> FloatXf;
 vector<FLOAT> FloatYf;
 vector<DWORD64> FloatMem;
@@ -205,7 +208,7 @@ DWORD64 BankTemp, InvBoxMemoryLoc, MapBoxMemoryLoc,ProgTemp,ChooseITemp,ChooseTT
 EqBoxMemoryLoc, PrayBoxMemoryLoc, SongBoxMemoryLoc, ChatBoxMemoryLoc, AbilBoxMemoryLoc, MenoBoxMemoryLoc,
 SkillRingBoxMemoryLoc, MIBoxMemoryLoc, MembBoxMemoryLoc, THBoxMemoryLoc, InterfTempMemoryLoc, UpTextTempMemoryLoc;
 //////////////////////////////////////
-DWORD64 TempBit,PrayBit;
+DWORD64 TempBit,PrayBit,HPBit;
 //////////////////////////////////////
 vector<DWORD64> intertest;
 vector<BYTE> intertest2;
@@ -282,7 +285,7 @@ BOOLEAN key14 = 0;
 BOOLEAN key15 = 0;
 BOOLEAN key16 = 0;
 BOOLEAN key17 = 0;
-BOOLEAN key18,key19,key20, key21, key22, key23, key24, key25, key26, key27, key28, key29, key30,key31;
+BOOLEAN key18,key19,key20, key21, key22, key23, key24, key25, key26, key27, key28, key29, key30,key31,key32;
 BOOLEAN debug = 1;
 BOOLEAN debug2 = 0;
 DWORD64 StartTime = 0;
@@ -3736,21 +3739,53 @@ WORD GetSlay() {
 	return 0;
 }
 
-WORD GetHP(){
+WORD GetHP_(){
 
-	if (HP !=NULL) {
+	WORD placeh = 659;
+	if (LocalPlayer != NULL) {
+		if (HPBit == NULL) {
+			HPBit = FindVarBit(placeh).addr;
 
-		WORD bb2 = VirtPReadDword(HP + 0x30);
-		WORD p = bb2 / 2;
-		if (p > 15000) { p = 0; }
-		if (p != NULL) {
-			return p;
+		}
+		else {
+			//re-used
+			VB p = ReadBits(HPBit);
+			if (p.addr == placeh) {
+				//for some reasons its double
+				return (p.state & 0x0000ffff)/2;
+			}
+			else {
+				HPBit = 0;
+			}
 		}
 	}
 	return 0;
 }
 
-WORD GetAdr() {
+WORD GetHPMax_() {
+
+	WORD placeh = 659;
+	if (LocalPlayer != NULL) {
+		if (HPBit == NULL) {
+			HPBit = FindVarBit(placeh).addr;
+
+		}
+		else {
+			//re-used
+			VB p = ReadBits(HPBit);
+			if (p.addr == placeh) {
+				//some reason not 2x
+				return (p.state >> 16);
+			}
+			else {
+				HPBit = 0;
+			}
+		}
+	}
+	return 0;
+}
+
+WORD GetAdr_() {
 
 	if (AD != NULL) {
 
@@ -3764,18 +3799,42 @@ WORD GetAdr() {
 	return 0;
 }
 
-WORD GetPray() {
-	WORD pray= 3274; 
+WORD GetPray_() {
+
+	WORD placeh= 3274; 
 	if (LocalPlayer != NULL) {
 		if (PrayBit == NULL) {
-			PrayBit = FindVarBit(pray).addr;
+			PrayBit = FindVarBit(placeh).addr;
 
 		}
 		else {
 			//re-used
 			VB p = ReadBits(PrayBit);
-			if (p.addr == pray) {
-				return p.state & 0x0000ffff;
+			if (p.addr == placeh) {
+				//for some reason its 100x//got bored
+				return ((p.state <<16)>>16);
+			}
+			else {
+				PrayBit = 0;
+			}
+		}
+	}
+	return 0;
+}
+
+WORD GetPrayMax_() {
+
+	WORD placeh = 3274;
+	if (LocalPlayer != NULL) {
+		if (PrayBit == NULL) {
+			PrayBit = FindVarBit(placeh).addr;
+
+		}
+		else {
+			//re-used
+			VB p = ReadBits(PrayBit);
+			if (p.addr == placeh) {
+				return (p.state >>16)*100;
 			}
 			else {
 				PrayBit = 0;
@@ -4231,7 +4290,7 @@ FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 	InterfaceComp p;
 
 
-	if (ItemCoord.x != NULL) {
+	if (ItemCoord.x > 0 && ItemCoord.y > 0 && pl.x > 0 && pl.y > 0) {
 		if (InterfCheck(MapBoxMemoryLoc, 1477, 87, 0xffff, 44)) {
 				//cout << "find1" << "\n";
 				p = GetInterfaceData(MapBoxMemoryLoc);
@@ -6568,6 +6627,7 @@ VOID ReadCObjArrays()
 	Objectsymid.clear();
 	Objectsxsize.clear();
 	Objectsxsize.clear();
+	ObjectsName.clear();
 	//
 	DecorXf.clear();
 	DecorYf.clear();
@@ -6575,6 +6635,7 @@ VOID ReadCObjArrays()
 	DecorMem.clear();
 	Decorxmid.clear();
 	Decorymid.clear();
+	DecorName.clear();
 	//
 	GIX2.clear();
 	GIY2.clear();
@@ -6654,23 +6715,18 @@ VOID ReadCObjArrays()
 						DWORD Type = VirtPReadDword(PlaceHolder + 0x60);
 						TypeByte.push_back(Type);
 
+
+
 						//player type ==2 
 						if (Type == 2) {
-							//cout << "ok11" << endl;
 							FLOAT bb1 = VirtPReadFloat(PlaceHolder + poff11);
 							FLOAT bb2 = VirtPReadFloat(PlaceHolder + poff22);
-							//printf("ok12:\n");
 							if (bb1 > 0.f && bb2 > 0.f) {
 								BYTE active1 = VirtPReadByte(PlaceHolder + npca1);
 								BYTE active2 = VirtPReadByte(PlaceHolder + npca2);
 								if ((active1 > 0 && active1 < 4) && (active2 > 0 && active2 < 7)) {
-									//printf("ok1:\n");
 									//if (CheckVisibleLimit(bb1, bb2)) {
-										//printf("ok2:\n");
-										//filter for pengs
 									string s = VirtPReadChar(PlaceHolder + poffname);
-									//	string cw = "Headless";
-									//	if (s.find(cw) != string::npos) {
 									PlName.push_back(s);
 									PlMem.push_back(PlaceHolder);
 									PlX.push_back(bb1 - 256.f);
@@ -6707,24 +6763,14 @@ VOID ReadCObjArrays()
 
 						//npc type
 						if (Type == 1) {
-							//	printf("ok11:\n");
 							FLOAT bb1 = VirtPReadFloat(PlaceHolder + npcoff11);
 							FLOAT bb2 = VirtPReadFloat(PlaceHolder + npcoff22);
-							//printf("ok12:\n");
 							if (bb1 > 0.f && bb2 > 0.f) {
 								BYTE active1 = VirtPReadByte(PlaceHolder + npca1);
 								BYTE active2 = VirtPReadByte(PlaceHolder + npca2);
-								//1==is active but not on screen, 2 and higher active on screen
+								//1==is active but not on screen, 2 and higher (flickers!) active on screen
 								if ((active1 > 0 && active1 < 4) && (active2 > 0 && active2 < 7)) {
-									//if its 1 then its active but 100% not on screen
-									//NPCstate.push_back(active1);
-									//printf("ok1:\n");
-									//if (CheckVisibleLimit(bb1, bb2)) {
-										//printf("ok2:\n");
-										//filter for pengs
 									string s = VirtPReadChar(PlaceHolder + npcoffname);
-									//	string cw = "Headless";
-									//	if (s.find(cw) != string::npos) {
 									NPCName.push_back(s);
 									NPCMem.push_back(PlaceHolder);
 									NPCX.push_back(bb1 - 256.f);
@@ -6789,6 +6835,12 @@ VOID ReadCObjArrays()
 											ObjectsID.push_back(bb3);
 											ObjectsIDu.push_back(bb4);
 											ObjectsMem.push_back(PlaceHolder);
+											//
+											DWORD64 Placeholder2 = VirtPRead64(PlaceHolder + aooff33-0x10);
+											//
+											DWORD64 Placeholder3 = VirtPRead64(Placeholder2 + aoofftx);
+											string s = VirtPReadChar(Placeholder3);
+											ObjectsName.push_back(s);
 
 											WORD xm = VirtPReadWord(PlaceHolder + aooffxm);
 											WORD ym = VirtPReadWord(PlaceHolder + aooffym);
@@ -6823,10 +6875,7 @@ VOID ReadCObjArrays()
 								WORD bb1 = VirtPReadWord(PlaceHolder + dooff11);
 								WORD bb2 = VirtPReadWord(PlaceHolder + dooff22);
 								if (bb2 != NULL && bb1 != NULL) {
-									//printf("ok1:\n");
 									//if (CheckVisibleLimit2(bb1, bb2)) {
-										//printf("ok2:\n");
-
 
 										DecorXf.push_back(bb1*512.f);
 										DecorYf.push_back(bb2*512.f);
@@ -6836,7 +6885,10 @@ VOID ReadCObjArrays()
 										DWORD64 Placeholder2 = VirtPRead64(PlaceHolder + dooff33);
 										//now read that id from other array
 										DWORD OtherID = VirtPReadDword(Placeholder2 + dooff44);
-
+										//text test
+										DWORD64 Placeholder3 = VirtPRead64(Placeholder2 + doofftx);
+										string s = VirtPReadChar(Placeholder3);
+										DecorName.push_back(s);
 										DecorID.push_back(OtherID);
 										DecorMem.push_back(PlaceHolder);
 										WORD xm = VirtPReadWord(PlaceHolder + dooffxm);
@@ -6861,13 +6913,11 @@ VOID ReadCObjArrays()
 							BYTE bb6 = VirtPReadByte(PlaceHolder + goff7);
 							//active check first
 							if ((bb5 >0 && bb5 <5) && (bb6 >0 && bb6 <5)) {
-								//printf("ok1:\n");
 								FLOAT bb1 = VirtPReadFloat(PlaceHolder + goff11);
 								FLOAT bb2 = VirtPReadFloat(PlaceHolder + goff22);
 
 								if (bb1 != NULL && bb2 != NULL) {
 									//if (CheckVisibleLimit(bb1, bb2)) {
-										//	printf("ok2:\n");
 
 										//directly points to other array! where is id written
 										DWORD64 Placeholder2 = VirtPRead64(PlaceHolder + goff33);
@@ -10706,9 +10756,9 @@ int StartGraphicOverlay()
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 180.f), ImColor(0, 255, 255, 255), "PAnim:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 180.f), ImColor(0, 255, 0, 255), to_string(ReadPlayerAnim()).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 190.f), ImColor(0, 255, 255, 255), "HP:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 190.f), ImColor(0, 255, 0, 255), to_string(GetHP()).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 190.f), ImColor(0, 255, 0, 255), to_string(GetHP_()).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 200.f), ImColor(0, 255, 255, 255), "Pray:", 0, 0.0f, 0);
-				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 200.f), ImColor(0, 255, 0, 255), to_string(GetPray()).c_str(), 0, 0.0f, 0);
+				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 200.f), ImColor(0, 255, 0, 255), to_string(GetPray_()).c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 210.f), ImColor(0, 255, 255, 255), "Sidetest:", 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(70.f, 210.f), ImColor(0, 255, 0, 255),  FindSideText().c_str(), 0, 0.0f, 0);
 				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 220.f), ImColor(0, 255, 255, 255), "IFilter:", 0, 0.0f, 0);
@@ -11031,6 +11081,7 @@ int StartGraphicOverlay()
 							string result(stream.str());
 
 							if (Objectsxmid[i] != NULL && Objectsymid[i] != NULL) {
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Objectsxmid[i], Objectsymid[i] - 30.f), ImColor(0, 255, 0, 255), ObjectsName[i].c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Objectsxmid[i] - 25.f, Objectsymid[i] - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Objectsxmid[i], Objectsymid[i] - 20.f), ImColor(0, 255, 0, 255), to_string(ObjectsID[i]).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Objectsxmid[i] - 25.f, Objectsymid[i] - 10), ImColor(0, 255, 0, 255), "idu:", 0, 0.0f, 0);
@@ -11042,6 +11093,7 @@ int StartGraphicOverlay()
 							else {
 								FFPOINT xy = TileToMouseTest22({ ObjectsXf[i], ObjectsYf[i] });
 
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(255, 255, 0, 255), ObjectsName[i].c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 25.f, xy.y - 20.f), ImColor(255, 255, 0, 255), "id:", 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(255, 255, 0, 255), to_string(ObjectsID[i]).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 25.f, xy.y - 10), ImColor(255, 255, 0, 255), "idu:", 0, 0.0f, 0);
@@ -11131,6 +11183,7 @@ int StartGraphicOverlay()
 							string result(stream.str());
 
 							if (Decorxmid[i] != NULL && Decorymid[i] != NULL) {
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Decorxmid[i], Decorymid[i] - 20.f), ImColor(0, 255, 0, 255), DecorName[i].c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Decorxmid[i], Decorymid[i] - 10.f), ImColor(0, 255, 0, 255), to_string(DecorID[i]).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(Decorxmid[i], Decorymid[i]), 1, ImColor(255, 0, 0, 255));
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(Decorxmid[i] - 25.f, Decorymid[i]), ImColor(0, 255, 0, 255), "Mem:", 0, 0.0f, 0);
@@ -11138,6 +11191,7 @@ int StartGraphicOverlay()
 							}
 							else {
 								FFPOINT xy = TileToMouseTest22({ DecorXf[i], DecorYf[i] });
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(255, 255, 0, 255), DecorName[i].c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(255, 255, 0, 255), to_string(DecorID[i]).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 1, ImColor(255, 0, 0, 255));
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 25.f, xy.y), ImColor(255, 255, 0, 255), "Mem:", 0, 0.0f, 0);
@@ -11181,7 +11235,7 @@ int StartGraphicOverlay()
 								stream2<< hex << holder + alloff66;
 								string result2(stream2.str());
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 40.f), ImColor(0, 255, 0, 255), result2.c_str(), 0, 0.0f, 0);
-								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 30.f), ImColor(0, 255, 0, 255), to_string((part)).c_str(), 0, 0.0f, 0);
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 30.f), ImColor(0, 255, 0, 255), to_string(part).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 20.f), ImColor(0, 255, 0, 255), to_string((ViewPartialNPC[i])).c_str(), 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i] - 50.f, NPCymid[i] + 10.f), ImColor(0, 255, 0, 255), "MemLoc:", 0, 0.0f, 0);
 								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(NPCxmid[i], NPCymid[i] + 10.f), ImColor(0, 255, 0, 255), result.c_str(), 0, 0.0f, 0);
@@ -11677,7 +11731,7 @@ int StartGraphicOverlay()
 			}
 
 			//minimap Aobjects
-			if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F7)) {
+			if (!GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F7)) {
 				if (key20 == TRUE) { key20 = FALSE; Sleep(200); }
 				else { if (key20 == FALSE) { key20 = TRUE; Sleep(200); } }
 			}
@@ -11691,29 +11745,83 @@ int StartGraphicOverlay()
 						ReadCObjArrays();
 					}
 				}
-				for (DWORD i = 0; i < ObjectsXf.size(); i++) {
-					//for (DWORD i = 0; i < ObjX.size(); i++) {
+				if (!ObjectsXf.empty()) {
+					ImGui::PushFont(io.Fonts->Fonts[1]);
+					for (DWORD i = 0; i < ObjectsXf.size(); i++) {
+						//for (DWORD i = 0; i < ObjX.size(); i++) {
 
-					//cout <<dec<< "Mousec:" <<"\n";
-					//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
-					FFPOINT xy = ToMapFFPOINT({ ObjectsXf[i], ObjectsYf[i] });
-					//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
+						//cout <<dec<< "Mousec:" <<"\n";
+						//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
+						FFPOINT xy = ToMapFFPOINT({ ObjectsXf[i], ObjectsYf[i] });
+						//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
 
 
-					//stringstream stream;
-					//stream << hex << ObjID[i];
-					//	string result(stream.str());
+						//stringstream stream;
+						//stream << hex << ObjID[i];
+						//	string result(stream.str());
 
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
 
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
-					ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
-					ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), to_string(ObjectsID[i]).c_str(), 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
+						ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
+						ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), ObjectsName[i].c_str(), 0, 0.0f, 0);
 
+					}
+					ImGui::PopFont();
 				}
+			}
+
+			//minimap Aobjects special filter
+			if (GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F7)) {
+				if (key32 == TRUE) { key32 = FALSE; Sleep(200); }
+				else { if (key32 == FALSE) { key32 = TRUE; Sleep(200); } }
+			}
+			if (key32) {
+
+				if (AllObjectBool == FALSE) {
+					AllObjectBool = TRUE;
+					AllObjectCount++;
+					if (AllObjectCount>10) {
+						AllObjectCount = 0;
+						ReadCObjArrays();
+					}
+				}
+
+				if (!ObjectsXf.empty()) {
+					ImGui::PushFont(io.Fonts->Fonts[1]);
+					for (DWORD i = 0; i < ObjectsXf.size(); i++) {
+						//for (DWORD i = 0; i < ObjX.size(); i++) {
+						if (ObjectsName[i].length()>0) {
+						if (ObjectsName[i].find("door") != string::npos) {
+							string p = ObjectsName[i];
+							//resize						
+								p.resize(9, ' ');
+
+								//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
+								FFPOINT xy = ToMapFFPOINT({ ObjectsXf[i], ObjectsYf[i] });
+								//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
+
+
+								//stringstream stream;
+								//stream << hex << ObjID[i];
+								//	string result(stream.str());
+
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
+
+								//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
+								ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(200, 0, 200, 255));
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), p.c_str(), 0, 0.0f, 0);
+							}
+						}
+					}
+					ImGui::PopFont();
+				}				
 			}
 
 			//minimap Dobjects
@@ -11730,29 +11838,32 @@ int StartGraphicOverlay()
 						AllObjectCount = 0;
 						ReadCObjArrays();
 					}
-				}
-				for (DWORD i = 0; i < DecorXf.size(); i++) {
-					//if (DecorID[i]>61469) {
+				}				
+				if (!DecorXf.empty()) {
+					ImGui::PushFont(io.Fonts->Fonts[1]);
+					for (DWORD i = 0; i < DecorXf.size(); i++) {
+						//if (DecorID[i]>61469) {
 
-					//cout <<dec<< "Mousec:" <<"\n";
-					//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
-					FFPOINT xy = ToMapFFPOINT({ DecorXf[i], DecorYf[i] });
-					//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
+						//cout <<dec<< "Mousec:" <<"\n";
+						//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
+						FFPOINT xy = ToMapFFPOINT({ DecorXf[i], DecorYf[i] });
+						//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
 
 
-					//stringstream stream;
-					//stream << hex << ObjID[i];
-					//	string result(stream.str());
+						//stringstream stream;
+						//stream << hex << ObjID[i];
+						//	string result(stream.str());
 
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
 
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
-					ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
-					ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), to_string(DecorID[i]).c_str(), 0, 0.0f, 0);
-				//}
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
+						ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
+						ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), DecorName[i].c_str(), 0, 0.0f, 0);
+					}
+					ImGui::PopFont();
 				}
 			}
 
@@ -11773,6 +11884,7 @@ int StartGraphicOverlay()
 				}
 				//ReadGroundItemsArray2();
 				if (!GIID2.empty()) {
+					ImGui::PushFont(io.Fonts->Fonts[1]);
 					for (DWORD i = 0; i < GIID2.size(); i++) {
 
 						//FFPOINT xy = TileToMouseTest22({ GIX[i], GIY[i] });
@@ -11794,9 +11906,9 @@ int StartGraphicOverlay()
 						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((GIAM[i])).c_str(), 0, 0.0f, 0);
 						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x + 30, xy.y - 5.f), ImColor(255, 0, 0, 255), GIText[i].c_str(), 0, 0.0f, 0);
 						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 20.f, xy.y - 20.f), ImColor(0, 255, 255, 255), "Mem:", 0, 0.0f, 0);
-						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 255, 255), (result).c_str(), 0, 0.0f, 0);
-						ImGui::PopFont();
+						//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 255, 255), (result).c_str(), 0, 0.0f, 0);						
 					}
+					ImGui::PopFont();
 				}
 			}
 

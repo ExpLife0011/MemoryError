@@ -176,6 +176,8 @@ WORD aooff11 = 0x15c;
 WORD aooff22 = 0x160;
 //ids
 WORD aooff33 = 0x198;
+//to the text in other array
+WORD aoofftx = 0x1f8;
 //ids unique
 WORD aooff44 = 0x118;
 //choped down boolean
@@ -200,8 +202,10 @@ WORD dooff11 = 0x10c;
 WORD dooff22 = 0x110;
 //ids
 WORD dooff33 = 0x118;
-//ids other array
+//ids in other array
 WORD dooff44 = 0x40;
+//to the text in other array
+WORD doofftx = 0x1f8;
 //activ
 WORD dooff55 = 0x8;
 WORD dooff66 = 0xc;

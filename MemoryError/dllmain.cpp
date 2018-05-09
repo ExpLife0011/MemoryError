@@ -50,12 +50,35 @@ char* PascalExports[] =
 	(char*)"ReadNPCInFocusHealth", (char*)"Function ReadNPCInFocusHealth(): Int32;",
 	(char*)"ReadNPCInFocusAnim", (char*)"Function ReadNPCInFocusAnim(): Int32;",
 	(char*)"ReadInterface", (char*)"Function ReadInterface(id1,id2,id3,id4:Int32): TRect;",
-	(char*)"ReadVarpBit", (char*)"Function ReadVarpBit(id:Int32): Int32;"
+	(char*)"ReadVarpBit", (char*)"Function ReadVarpBit(id:Int32): Int32;",
+	(char*)"GetPray", (char*)"Function GetPray(): Int32;",
+	(char*)"GetPrayMax", (char*)"Function GetPrayMax(): Int32;",
+	(char*)"GetHP", (char*)"Function GetHP(): Int32;",
+	(char*)"GetHPMax", (char*)"Function GetHPMax(): Int32;"
 
 };
 
 static const DWORD PascalExportCount = sizeof(PascalExports) / (sizeof(PascalExports[0]) * 2);
 
+extern "C"  __declspec(dllexport) WORD GetHPMax()
+{
+	return GetHPMax_();
+}
+
+extern "C"  __declspec(dllexport) WORD GetHP()
+{
+	return GetHP_();
+}
+
+extern "C"  __declspec(dllexport) WORD GetPrayMax()
+{
+	return GetPrayMax_();
+}
+
+extern "C"  __declspec(dllexport) WORD GetPray()
+{
+	return GetPray_();
+}
 
 typedef char* SimbaString;
 extern "C" __declspec(dllexport) BOOLEAN ReadUpTxt(SimbaString str) {
