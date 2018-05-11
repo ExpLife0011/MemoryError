@@ -3474,24 +3474,13 @@ VOID RefVarpBits1()
 	vector<DWORD64> results;
 	//1
 	vector<DWORD64> results21;
-	vector<DWORD> results2id1;
-	//vector<DWORD64> results2base1;
-	vector<DWORD64> results31;
-	vector<DWORD> results3id1;
-	vector<DWORD64> results3base1;
-	//vector<DWORD64> results3basead1;
-	//2
-	vector<DWORD64> results22;
-	vector<DWORD> results2id2;
-	vector<DWORD64> results2base2;
-	vector<DWORD64> results32;
-	vector<DWORD> results3id2;
-	vector<DWORD64> results3base2;
-	vector<DWORD64> results3basead2;
-	//
 	vector<DWORD64> firsthit;
 	vector<DWORD> countafter;
 	vector<DWORD64> filterhit;
+	//2
+	vector<DWORD64> results22;
+	vector<DWORD64> results3base2;
+	//
 
 	//FFFFFFFFFFFFFFFFFFFFFFFF
 	DWORD64 byte1 = 0xFFFFFFFFFFFFFFFF;
@@ -3513,13 +3502,18 @@ VOID RefVarpBits1()
 		DWORD64 ScanPlaceHolder = ScAdd1;
 		DWORD64 ScanStart;
 		DWORD64 ScanEnd;
-		if (ScanBack > ScanPlaceHolder) { ScanStart = 500000; }
+		DWORD64 ScanBack2= 0x50000000;
+		DWORD64 ScanFoward2= 0x10000000;
+
+		if (ScanBack2 > ScanPlaceHolder) { ScanStart = 500000; }
 		else {
-			ScanStart = ScanPlaceHolder - ScanBack;
+			ScanStart = ScanPlaceHolder - ScanBack2;
 		}
-		ScanEnd = ScanPlaceHolder + ScanFoward;
+		ScanEnd = ScanPlaceHolder + ScanFoward2;
 		if (ScanEnd > RSExeStart) { ScanEnd = RSExeStart; }
-		ps.SearchRemoteWhole(proc, 0, 0, results);
+
+		
+		ps.SearchRemoteEx(proc, ScanStart, ScanEnd, results);
 		if (results.empty()) { cout << "varbits Found non \n"; }
 		if (!results.empty()) {
 			if (debug) { cout << "varbits: " << dec << results.size() << "\n"; }
@@ -3867,6 +3861,7 @@ WORD GetBitsValue1(WORD bit) {
 //for boolean
 VOID GetBits(WORD bits) {
 	bitset<32> p = bitset<32>(FindVarBit(bits).state);
+
 	for (int i = 0; i < 32; i++) {
 		cout << p[i];
 	}
@@ -4282,19 +4277,42 @@ InterfaceComp2 GetInterfaceData2(DWORD64 mem) {
 	return p;
 }
 
+
+//stuff//
+FFPOINT ToMapFFPOINTExperiment1(FFPOINT ItemCoord) {
+	FLOAT dx=40;
+	FLOAT dy=35;
+	FLOAT sx;
+	FLOAT sy;
+	FLOAT cosAngle = ((VirtPReadFloatAll(Compass + 0x88)));
+	FLOAT sinAngle = ((VirtPReadFloatAll(Compass + 0x8c)));
+	cosAngle = cosAngle-1.f;
+
+			sx = (dx + ((cosAngle * dx) - (sinAngle * dy)))+835;
+			sy = (dy + ((sinAngle * dx) + (cosAngle * dy)))+144;
+
+	return{ sx,sy };
+}
+
 //tiles to map
 FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 	FFPOINT pl= PlayerCoordFloatRaw();
 	FFPOINT center;
 	FFPOINT endcalc;
 	InterfaceComp p;
+	FLOAT sx,sy;
 
 
-	if (ItemCoord.x > 0 && ItemCoord.y > 0 && pl.x > 0 && pl.y > 0) {
+	if (ItemCoord.x > 0 && ItemCoord.y > 0 && pl.x > 0 && pl.y > 0 && Compass>0) {
 		if (InterfCheck(MapBoxMemoryLoc, 1477, 87, 0xffff, 44)) {
 				//cout << "find1" << "\n";
 				p = GetInterfaceData(MapBoxMemoryLoc);
 				if (p.xys.x > 0 && p.xys.y > 0) {
+					
+					                                        //correction for my mess
+					FLOAT cosAngle = ((VirtPReadFloatAll(Compass + 0x88))-1.f);
+					                                        //reverse
+					FLOAT sinAngle = ((VirtPReadFloatAll(Compass + 0x8c)))*-1.f;
 
 					FLOAT x = (p.xy.x + p.xys.x / 2.f) - 0.65f;
 					FLOAT y = (p.xy.y + p.xys.y / 2.f) + 5.3f;
@@ -4303,11 +4321,13 @@ FFPOINT ToMapFFPOINT(FFPOINT ItemCoord){
 					FLOAT xx = (pl.x - ItemCoord.x);
 					FLOAT yy = (pl.y - ItemCoord.y);
 
-					endcalc.x = (center.x - xx* 0.00791f);
-					endcalc.y = (center.y + yy* 0.00791f);
+					endcalc.x = ( xx* 0.00791f);
+					endcalc.y = ( yy* 0.00791f);
 
+					sx = center.x - (endcalc.x + ((cosAngle * endcalc.x) - (sinAngle * endcalc.y)));
+					sy = center.y + (endcalc.y + ((sinAngle * endcalc.x) + (cosAngle * endcalc.y)));
 
-					return{ endcalc.x,endcalc.y };
+					return{ sx,sy };
 				}
 			}
 		else {
@@ -6676,7 +6696,8 @@ VOID ReadCObjArrays()
 		//if (GetAsyncKeyState(VK_MULTIPLY)) { sw = TRUE; }
 		//if (GetAsyncKeyState(VK_DIVIDE)) { sw2 = TRUE; }
 
-		DWORD64 Sc = ScAdd1 + alloff1;
+		                                //1 step back
+		DWORD64 Sc = ScAdd1 + alloff1 - alloff2;
 		for (DWORD i = 0; i < limit; i++) {
 			offh = offh + alloff2;
 			DWORD64 NextChunk = Sc + offh;
@@ -6716,15 +6737,14 @@ VOID ReadCObjArrays()
 						TypeByte.push_back(Type);
 
 
-
 						//player type ==2 
 						if (Type == 2) {
 							FLOAT bb1 = VirtPReadFloat(PlaceHolder + poff11);
 							FLOAT bb2 = VirtPReadFloat(PlaceHolder + poff22);
 							if (bb1 > 0.f && bb2 > 0.f) {
-								BYTE active1 = VirtPReadByte(PlaceHolder + npca1);
-								BYTE active2 = VirtPReadByte(PlaceHolder + npca2);
-								if ((active1 > 0 && active1 < 4) && (active2 > 0 && active2 < 7)) {
+								BYTE active1 = VirtPReadByte(PlaceHolder + pa1);
+								BYTE active2 = VirtPReadByte(PlaceHolder + pa2);
+								if ((active1 > 0 && active1 < 4) && (active2 > 0 && active2 < 7)) {						
 									//if (CheckVisibleLimit(bb1, bb2)) {
 									string s = VirtPReadChar(PlaceHolder + poffname);
 									PlName.push_back(s);
@@ -9459,114 +9479,24 @@ VOID LSA1() {
 		if (SL == NULL || HP==NULL || R5 == 1) {
 			R5 = 0;
 			 RefVarpBits1();
-			//SL=RefSlrepoints()[0];
 		}
-		/*
-		if (PRO == NULL || R6 == 1) {
-			R6 = 0;
-			PRO == ScanPro();
-		}
-*/
 	}
 }
-VOID LSA2() {
-	//if (LocalPlayer != NULL) {
-		//objarray
-		//if (ScAdd1 == NULL || R7 == 1) {                              //1BD6C000
-		//	R7 = 0;
-		//	cout << "Lookin for obj array" << "\n";
-		//	if (ScAdd1 == NULL) {
-		//		ScAdd1 = ScanAllObjects();
-		//	}
-		//}
-		//Grounditems//exe2
-		//if (ScAdd4==NULL || R7 == 1) {
-		//	R7 = 0;
-		//	cout << "Lookin for Gr array" << "\n";
-		//	ScAdd4 = ScanGr();
-		//	cout << "Found ground array: " << ScAdd4 << "\n";
-		//}
-/*
-		//Grounditems dim//exe4
-		if (ScAdd11 == NULL || R8 == 1) {
-			R8 = 0;
-			cout << "Lookin for Gr2 array" << "\n";
-			ScAdd11 = ScanGr2();
-			cout << "Found ground2 array: " << ScAdd11 << "\n";
-		}
-		/*
-		if (PP == NULL || AD ==NULL || R9 == 1) {
-			R9 = 0;
-			PP=RefPraypoints()[0];
-			AD=RefAdrepoints()[0];
-		}
-	*/	
-	//}
-	
+VOID LSA2() {	
 }
 VOID LSA3() {
-	if (ScAdd1 != NULL) {
-		///invbox
-		//PatternSearch PS6inv{
-		//	0x00, 0x00, 0xc5, 0x05, 0x00
-		//};
-
-		if (Compass == NULL || R10 == 1) {
-			R10 = 0;
-			//Compass = SearchCompass();
-		}
-/*		
-		if (OB == NULL || R11 == 1) {
-			R11 = 0;
-			OB = ScanAObjects();
-		}
-		if (DOB2 == NULL || R12 == 1) {
-			R12 = 0;
-			DOB2 = ScanDecor();
-		}
-		*/
+	if (Compass == NULL || R10 == 1) {
+		R10 = 0;
+		Compass = SearchCompass();
 	}
 }
 VOID LSA4() {
-	//map box
-	PatternSearch PS6map{
-		0x00, 0x00, 0xc5, 0x05, 0x00
-	};
-	MEMss BlockA;
-
 	//interface
-	if (IF==NULL || R13 == 1) {
-		R13 = 0;
-		IF = ScanInteraceArray();
-	}
-	//if (IF2==NULL || R14 == 1) {
-	//	R14 = 0;
-	//	IF2 = ScanInteraceArray2();
-	//}
+	IF = ScanInteraceArray();
+	IF2 = ScanInteraceArray2();
 	
-	INVIArr = ScanForInvArray();
+	//INVIArr = ScanForInvArray();
 	//BANKArr = ScanForBankArray();
-	//cout <<"Find: "<<hex<< Locateinterface(762, 3, 0xffff, 0xffff) << endl;
-
-	MEMss BlockA2;
-	//BlockA2 = DeterMemoryBlockLenght(IF);
-	//cout << "IF:" << hex << BlockA2.start << "\n";
-	//BlockA2 = DeterMemoryBlockLenght(IF2);
-	//cout << "IF2:" << hex << BlockA2.start << "\n";
-	//BlockA2 = DeterMemoryBlockLenght(TI);
-	//cout << "TI:" << hex << BlockA2.start << "\n";
-
-	//uptext
-	//if (ScAdd8 == NULL || R8 == 1) {
-	//	R8 = 0;
-		//cout << "Lookin for uptext" << "\n";
-		//	ScAdd8 = ScanMAdvanced22(PS8, 0x100000000, ScAdd, "uptext: ", offsets5, bytes5, UPDOWN5);
-	//}
-
-	//if (FO == NULL) {
-	//	FO = ScanFloat();
-	//}
-
 }
 
 
@@ -10953,7 +10883,8 @@ int StartGraphicOverlay()
 				 
 
 				
-				
+				FFPOINT testing =ToMapFFPOINTExperiment1({ 1.f,1.f });
+				ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(testing.x, testing.y), 4, ImColor(0, 255, 200, 255));
 				//cout <<hex<< InvBoxMemoryLoc << endl;
 			//	FindInterfAll();
 				//MarkupMem(LocalPlayer,LocalPlayer+5000000);
@@ -10963,7 +10894,7 @@ int StartGraphicOverlay()
 				//binary_to_compressed_c("C:\\ProggyTiny.ttf", "ProggyTiny", TRUE, TRUE);
 				//ScanTest1();
 				//ScanTest2();
-				key4 = FALSE;	
+				//key4 = FALSE;	
 				//test();
 				//Searchtest(385);
 				//SearchCompass();
@@ -11774,7 +11705,7 @@ int StartGraphicOverlay()
 				}
 			}
 
-			//minimap Aobjects special filter
+			//minimap Aobjects special filter for dung doors
 			if (GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F7)) {
 				if (key32 == TRUE) { key32 = FALSE; Sleep(200); }
 				else { if (key32 == FALSE) { key32 = TRUE; Sleep(200); } }
