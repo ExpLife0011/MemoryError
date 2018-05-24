@@ -38,11 +38,14 @@
 #include <fstream>
 #include "MD5.h"
 #include <bitset>
-
+#include "interception.h"
+#include "utils.h""
+#pragma comment(lib, "interception.lib")
 
 
 
 using namespace std;
+
 static mt19937 generator;
 
 //for coordinates
@@ -50,6 +53,12 @@ struct FFPOINT {
 	FLOAT x;
 	FLOAT y;
 	FLOAT z;
+};
+
+//for coordinates, WORD size point
+struct intPOINT {
+	int x;
+	int y;
 };
 
 //for coordinates, WORD size point
@@ -103,6 +112,12 @@ struct VB {
 	DWORD64 addr;
 };
 
+//for dung
+struct DungMap {
+	string text;
+	WORD varp;
+};
+
 // keyboard hooky
 static HHOOK _hook;
 static HHOOK _hook2;
@@ -117,6 +132,7 @@ static INT sysmemfree;
 static INT sysmemused;
 static INT sysmemusedrs3;
 
+
 static ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU, lastCPU2, lastSysCPU2, lastUserCPU2;
 static int numProcessors;
 static HANDLE self;
@@ -128,8 +144,8 @@ InterfaceComp2 GetInterfaceData2(DWORD64);
 bool binary_to_compressed_c(const char* filename, const char* symbol, bool use_base85_encoding, bool use_compression);
 static const char*  GetDefault2CompressedFontDataTTFBase85();
 
-extern HINSTANCE hInstance2;
-BOOLEAN Start(BOOLEAN, BOOLEAN);
+
+BOOLEAN Start(BOOLEAN, BYTE);
 BOOLEAN CheckRS3();
 VOID Cpuinit();
 VOID LoadItemText();
@@ -146,20 +162,20 @@ DWORD ReadCoordY3i();
 DWORD ReadCoordX3i();
 BOOLEAN PlayerLoggedIn();
 POINT PlayerCoordPoint();
-int GetFloorLv_2();
+BYTE GetFloorLv_2();
 int GetMouseID_();
 FFPOINT TileToMouseTest22(FFPOINT);
 BOOLEAN FindSObj(vector<DWORD>, BYTE);
 WPOINT InvFindItem(DWORD);
 BOOLEAN FindGItemBool_(vector<DWORD>);
 BOOLEAN FindGItem_(vector<DWORD>, BYTE, INT, INT, BYTE, string);
-BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT, BYTE, string);
+BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT,INT, INT, BOOLEAN, BYTE, string);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,DWORD);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT,DWORD);
 string ReadUpText();
 DWORD ReadPlayerAnim();
-string GetItemText(DWORD);
+string GetItemText(WORD);
 string ReadText(DWORD64);
 FFPOINT PlayerCoordFloat();
 FFPOINT PlayerCoordFloatRaw();
@@ -169,7 +185,7 @@ VOID MouseCLRS(POINT, BOOLEAN);
 INT LocateStartAddresses();
 WPOINT TToScreen2(FFPOINT);
 VOID RandomSleep();
-VOID RandomSleep2(DWORD,DWORD);
+VOID RandomSleep2(DWORD,DWORD,DWORD);
 BOOLEAN CheckAnim();
 BOOLEAN CheckAnim2();
 BOOLEAN CheckAnim3();
@@ -179,16 +195,20 @@ BOOLEAN InvFull();
 BYTE Invfreecount();
 BOOLEAN ReadPlayerMovin();
 //BOOLEAN ClickTile_(POINT);
-BOOLEAN FindAObj(vector<DWORD>, BYTE,INT,INT, BYTE, string);
-BOOLEAN FindDObj(vector<DWORD>, BYTE, INT, INT,BYTE, string);
+BOOLEAN FindAObj(vector<DWORD>, BYTE,INT,INT, INT,INT, BOOLEAN, BYTE, string);
+BOOLEAN FindDObj(vector<DWORD>, BYTE, INT, INT, INT, INT, BOOLEAN,BYTE, string);
 POINT MousePos_();
 VOID MouseDrag_RS(POINT, POINT);
 VOID MouseMove_(POINT);
+VOID MouseMove_2(int x, int y, int rx, int ry);
 void MoveMouse(int x, int y, int rx, int ry);
 void WindMouse(double xs, double ys, double xe, double ye,
 	double gravity, double wind, double minWait, double maxWait,
 	double maxStep, double targetArea);
 double Hypot(double dx, double dy);
+void MoveMouse2(int x, int y, int rx, int ry);
+VOID MouseLeftClick(WORD sleep, WORD rand);
+VOID MouseRightClick(WORD sleep, WORD rand);
 BOOLEAN ClickInv_(DWORD);
 VOID KeyPress_(char);
 DWORD RandomGener2(DWORD);
@@ -197,6 +217,7 @@ DWORD64 Locateinterface(WORD, WORD, WORD, WORD);
 BYTE InvItemcount_(DWORD item);
 DWORD64 SystemTime();
 DWORD CRC32CheckSum(void* Data, DWORD, DWORD);
+BOOLEAN DiviOpen_();
 BOOLEAN BankOpen_();
 BOOLEAN ProgressOpen_();
 BOOLEAN ChooseIOpen_();
@@ -217,6 +238,9 @@ WORD GetPray_();
 WORD GetPrayMax_();
 WORD GetHP_();
 WORD GetHPMax_();
+VOID PIdle1();
+BOOLEAN PInArea(WORD, WORD, WORD, WORD, BYTE);
+VOID KeyboardPress(char, WORD, WORD);
 
 
 // File: 'C:\ProggyTiny.ttf' (35656 bytes)

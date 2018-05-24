@@ -6,9 +6,9 @@
 //datablock size
 WORD npcoff2 = 0x10f0;
 //x
-WORD npcoff11 = 0x37C;
+WORD npcoff11 = 0x384;
 //y
-WORD npcoff22 = 0x384;
+WORD npcoff22 = 0x38c;
 //name
 WORD npcoffname = 0x148;
 //anim
@@ -18,22 +18,22 @@ WORD npcoff44 = 0xc;
 // player nr? 00
 WORD npcoff55 = 0x76;
 // id 
-WORD npcoff66 = 0x1010;
+WORD npcoff66 = 0x1020;
 // life 
-WORD npcoff77 = 0x1048;
+WORD npcoff77 = 0x1058;
 //combat
-WORD npctest77 = 0x106C;
+WORD npctest77 = 0x107c;
 //floor
-WORD npcoff88 = 0x288;
+WORD npcoff88 = 0x290;
 //activ 1
 WORD npca1 = 0x8;
 //activ 2
 WORD npca2 = 0xc;
 // local ? 06
 WORD npcoff99 = 0xc;
-// hover
+// hover/not needed
 WORD npcoff111 = 0x4B4;
-// movin, 144 not, 152 startin, 156 full speed
+// movin, 144 not, 152 startin, 156 full speed//br
 WORD npcoff222 = 0x298;
 //xmid
 WORD npcoffxm = 0x88;
@@ -49,9 +49,9 @@ WORD poff1 = 0x40;
 //datablock size
 WORD poff2 = 0x2000;
 //x
-WORD poff11 = 0x37C;
+WORD poff11 = 0x384;
 //y
-WORD poff22 = 0x384;
+WORD poff22 = 0x38c;
 //name
 WORD poffname = 0x148;
 //anim
@@ -61,13 +61,13 @@ WORD poff44 = 0xc;
 // player nr? 00
 WORD poff55 = 0x76;
 // id 
-WORD poff66 = 0x1010;
+WORD poff66 = 0x1020;
 // life 
-WORD poff77 = 0x1048;
+WORD poff77 = 0x1058;
 //combat
-WORD ptest77 = 0x106C;
+WORD ptest77 = 0x107C;
 //floor
-WORD poff88 = 0x288;
+WORD poff88 = 0x290;
 //activ 1
 WORD pa1 = 0x8;
 //activ 2
@@ -76,10 +76,10 @@ WORD pa2 = 0xc;
 WORD poff99 = 0xc;
 // hover
 WORD poff111 = 0x4B4;
-// movin, 144 not, 152 startin, 156 full speed
+// movin, 144 not, 152 startin, 156 full speed/broken
 WORD poff222 = 0x298;
 //pray type
-WORD poff1111 = 0x1068;
+WORD poff1111 = 0x1078;
 ////////////////////////Interfaces1///////////////////////////////////////////
 //dif
 WORD Ioff2 = 0x278;
@@ -177,7 +177,9 @@ WORD aooff22 = 0x160;
 //ids
 WORD aooff33 = 0x198;
 //to the text in other array
-WORD aoofftx = 0x1f8;
+WORD aoofftx = 0x200;
+//first action text
+WORD aoofftx2 = 0xa8;
 //ids unique
 WORD aooff44 = 0x118;
 //choped down boolean
@@ -205,7 +207,7 @@ WORD dooff33 = 0x118;
 //ids in other array
 WORD dooff44 = 0x40;
 //to the text in other array
-WORD doofftx = 0x1f8;
+WORD doofftx = 0x200;
 //activ
 WORD dooff55 = 0x8;
 WORD dooff66 = 0xc;
@@ -216,9 +218,9 @@ WORD dooffym = 0x8c;
 ///////////grounditems/////////////////////////////////////////////////////////////////
 WORD goff2 = 0x9a0;
 //x
-WORD goff11 = 0x98C;
+WORD goff11 = 0x994;
 //y
-WORD goff22 = 0x994;
+WORD goff22 = 0x99c;
 //to id
 WORD goff33 = 0x130;
 // floor

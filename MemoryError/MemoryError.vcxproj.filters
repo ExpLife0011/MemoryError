@@ -40,6 +40,12 @@
     <ClInclude Include="OffSets.h">
       <Filter>sauce\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="interception.h">
+      <Filter>sauce\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>sauce\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -64,6 +70,12 @@
       <Filter>sauce</Filter>
     </ClCompile>
     <ClCompile Include="binary_to_compressed_c.cpp">
+      <Filter>sauce</Filter>
+    </ClCompile>
+    <ClCompile Include="interception.c">
+      <Filter>sauce</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.c">
       <Filter>sauce</Filter>
     </ClCompile>
   </ItemGroup>

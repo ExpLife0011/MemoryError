@@ -165,10 +165,12 @@
     <ClInclude Include="imgui_impl_dx11.h" />
     <ClInclude Include="imgui_impl_dx9.h" />
     <ClInclude Include="imgui_internal.h" />
+    <ClInclude Include="interception.h" />
     <ClInclude Include="MD5.h" />
     <ClInclude Include="MemoryError.h" />
     <ClInclude Include="OffSets.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="binary_to_compressed_c.cpp" />
@@ -177,8 +179,10 @@
     <ClCompile Include="imgui_draw.cpp" />
     <ClCompile Include="imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui_impl_dx9.cpp" />
+    <ClCompile Include="interception.c" />
     <ClCompile Include="MD5.cpp" />
     <ClCompile Include="MemoryError.cpp" />
+    <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Blackbone\src\BlackBone\BlackBone.vcxproj">

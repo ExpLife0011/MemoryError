@@ -2,18 +2,18 @@
 #include "MemoryError.h"
 
 HINSTANCE hInstance;
-HINSTANCE hInstance2;
+
 
 char* PascalExports[] =
 {
-	(char*)"SetupRSReading", (char*)"Function SetupRSReading(HookB,OverLayB:Boolean): Boolean;",
+	(char*)"SetupRSReading", (char*)"Function SetupRSReading(OverLayB:Boolean;level:Byte): Boolean;",
 	(char*)"GetPCoords", (char*)"Function GetPCoords(): Tpoint;",
-	(char*)"GetPFloorLv", (char*)"Function GetPFloorLv(): Int32;",
+	(char*)"GetPFloorLv", (char*)"Function GetPFloorLv(): Byte;",
 	(char*)"Findobj", (char*)"Function Findobj(obj:array of Int32;size,d:Byte): Boolean;",
 	(char*)"InvItem", (char*)"Function InvItem(x:Int32): Tpoint;",
 	(char*)"FindGroundItems", (char*)"Function FindGroundItems(Gitem:array of Int32;size,d:Byte;cory,corx:Int32;action:Byte;str:string): Boolean;",
 	(char*)"FindGroundItemsBool", (char*)"Function FindGroundItemsBool(Gitem:array of Int32;size,d:Byte): Boolean;",
-	(char*)"FindNPCs1", (char*)"Function FindNPCs1(id:array of Int32;size,d:Byte;cory,corx:Int32;action:Byte;str:string): Boolean;",
+	(char*)"FindNPCs1", (char*)"Function FindNPCs1(id:array of Int32;size,d:Byte;corx,cory,cormx,cormy:Int32;usemap:Boolean;action:Byte;sidetext:string): Boolean;",
 	//(char*)"FindNPCs2", (char*)"Function FindNPCs2(id:array of Int32;size,d:Byte;h:Int32): Boolean;",
 	//(char*)"FindNPCs3", (char*)"Function FindNPCs3(id:array of Int32;size,d:Byte;spot:Tpoint): Boolean;",
 	//(char*)"FindNPCs4", (char*)"Function FindNPCs4(id:array of Int32;size,d:Byte;h:Int32;spot:Tpoint): Boolean;",
@@ -35,9 +35,10 @@ char* PascalExports[] =
 	(char*)"ClickTile", (char*)"Function ClickTile(x:Tpoint;minimap:Int32): Boolean;",
 	(char*)"MouseDrag", (char*)"Procedure MouseDrag(x,x2:Tpoint);",
 	(char*)"MouseMove", (char*)"Procedure MouseMove(x:Tpoint);",
-	(char*)"FindAobj", (char*)"Function FindAobj(obj:array of Int32;size,d:Byte;corx,cory:Int32;action:Byte;str:string): Boolean;",
-	(char*)"FindDobj", (char*)"Function FindDobj(obj:array of Int32;size,d:Byte;corx,cory:Int32;action:Byte;str:string): Boolean;",
+	(char*)"FindAobj", (char*)"Function FindAobj(obj:array of Int32;size,d:Byte;corx,cory,cormx,cormy:Int32;usemap:Boolean;action:Byte;str:string): Boolean;",
+	(char*)"FindDobj", (char*)"Function FindDobj(obj:array of Int32;size,d:Byte;corx,cory,cormx,cormy:Int32;usemap:Boolean;action:Byte;str:string): Boolean;",
 	(char*)"ClickInv", (char*)"Function ClickInv(Item:Int32): Boolean;",
+	(char*)"DiviOpen", (char*)"Function DiviOpen(): Boolean;",
 	(char*)"BankOpen", (char*)"Function BankOpen(): Boolean;",
 	(char*)"ProgressOpen", (char*)"Function ProgressOpen(): Boolean;",
 	(char*)"ChooseIOpen", (char*)"Function ChooseIOpen(): Boolean;",
@@ -54,11 +55,28 @@ char* PascalExports[] =
 	(char*)"GetPray", (char*)"Function GetPray(): Int32;",
 	(char*)"GetPrayMax", (char*)"Function GetPrayMax(): Int32;",
 	(char*)"GetHP", (char*)"Function GetHP(): Int32;",
-	(char*)"GetHPMax", (char*)"Function GetHPMax(): Int32;"
-
+	(char*)"GetHPMax", (char*)"Function GetHPMax(): Int32;",
+	(char*)"PlayerIdle", (char*)"Procedure PlayerIdle();",
+	(char*)"PlayerInArea", (char*)"Function PlayerInArea(xc,rangex,yc,rangey:Int32;floorz:Byte): Boolean;"
 };
 
 static const DWORD PascalExportCount = sizeof(PascalExports) / (sizeof(PascalExports[0]) * 2);
+
+
+extern "C"  __declspec(dllexport) BOOLEAN PlayerInArea(WORD xc, WORD rangex, WORD yc, WORD rangey, BYTE floorz)
+{
+	return PInArea(xc,rangex,yc,rangey,floorz);
+}
+
+extern "C"  __declspec(dllexport) VOID PlayerIdle()
+{
+	return PIdle1();
+}
+
+extern "C"  __declspec(dllexport) BOOLEAN DiviOpen()
+{
+	return DiviOpen_();
+}
 
 extern "C"  __declspec(dllexport) WORD GetHPMax()
 {
@@ -181,13 +199,13 @@ extern "C"  __declspec(dllexport) BOOLEAN ClickInv(DWORD Item)
 	return ClickInv_(Item);
 }
 
-extern "C"  __declspec(dllexport) BOOLEAN FindAobj(DWORD* obj, BYTE size, BYTE d,INT corx,INT cory, BYTE action, SimbaString str)
+extern "C"  __declspec(dllexport) BOOLEAN FindAobj(DWORD* obj, BYTE size, BYTE d,INT corx,INT cory, INT cormx, INT cormy, BOOLEAN usemap, BYTE action, SimbaString str)
 {
 	vector<DWORD> objectsArray;
 	for (DWORD i = 0; i < size; i++) {
 		objectsArray.push_back(obj[i]);
 	}
-	return  FindAObj(objectsArray, d,corx,cory,action,str);;
+	return  FindAObj(objectsArray, d,corx,cory,cormx,cormy,usemap,action,str);;
 }
 
 //typedef vector<DWORD> SimbaArray;
@@ -195,7 +213,7 @@ extern "C"  __declspec(dllexport) BOOLEAN FindAobj(DWORD* obj, BYTE size, BYTE d
 //typedef DWORD SimbaArray[];
 typedef DWORD SimbaArray[];
 //SimbaArray ob= {};
-extern "C"  __declspec(dllexport) BOOLEAN FindDobj(DWORD* obj , BYTE size, BYTE d, INT corx, INT cory, BYTE action, SimbaString str)
+extern "C"  __declspec(dllexport) BOOLEAN FindDobj(DWORD* obj , BYTE size, BYTE d, INT corx, INT cory, INT cormx, INT cormy, BOOLEAN usemap, BYTE action, SimbaString str)
 {
 	//cout <<dec<< obj[0] << endl;
 	//cout <<dec<< obj[1] << endl;
@@ -210,7 +228,7 @@ extern "C"  __declspec(dllexport) BOOLEAN FindDobj(DWORD* obj , BYTE size, BYTE 
 	for (DWORD i = 0; i < size; i++) {
 		objectsArray.push_back(obj[i]);
 	}
-	return  FindDObj(objectsArray, d, corx, cory, action, str);
+	return  FindDObj(objectsArray, d, corx, cory, cormx, cormy, usemap, action, str);
 	//return TRUE;
 }
 
@@ -311,13 +329,13 @@ extern "C"  __declspec(dllexport) BOOLEAN FindNPCs2(DWORD* id, BYTE size, BYTE d
 	return FindNPCss(objectsArray, d, h);
 }
 
-extern "C"  __declspec(dllexport) BOOLEAN FindNPCs1(DWORD* id, BYTE size , BYTE d,INT corx,INT cory, BYTE action, string sidetext)
+extern "C"  __declspec(dllexport) BOOLEAN FindNPCs1(DWORD* id, BYTE size , BYTE d,INT corx,INT cory, INT cormx, INT cormy, BOOLEAN usemap, BYTE action, SimbaString sidetext)
 {
 	vector<DWORD> objectsArray;
 	for (DWORD i = 0; i < size; i++) {
 		objectsArray.push_back(id[i]);
 	}
-	return FindNPCss(objectsArray,d,corx,cory,action,sidetext);
+	return FindNPCss(objectsArray,d,corx,cory, cormx, cormy, usemap,action,sidetext);
 }
 
 extern "C"  __declspec(dllexport) POINT MousePos()
@@ -340,20 +358,14 @@ extern "C"  __declspec(dllexport) POINT TileToScreen(POINT x)
 	return TToScreen(x);;
 }
 
-BOOLEAN Init()
-{
-	 hInstance2 = hInstance;
-		return true;
-}
-
 extern "C" int __declspec(dllexport) GetPluginABIVersion()
 {
 	return 2;
 }  
 
-extern "C" int __declspec(dllexport) SetupRSReading(BOOLEAN HookB, BOOLEAN OverLayB)
+extern "C" int __declspec(dllexport) SetupRSReading(BOOLEAN OverLayB, BYTE level)
 {	
-	return Start(HookB, OverLayB);
+	return Start(OverLayB, level);
 }
 
 extern "C" int __declspec(dllexport) GetPFloorLv()
@@ -429,7 +441,6 @@ extern "C" BOOLEAN __fastcall DllMain(HINSTANCE hinstDLL,
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hinstDLL);
 		hInstance = hinstDLL;	
-		Init();
 
 		return true;
 

@@ -7,3 +7,5 @@ BlackBone excellent haxing libary.
 https://github.com/DarthTon/
 Imgui dx9/dx10/dx11/vulkan render.
 https://github.com/ocornut/imgui
+Interception mouse and keyboard faking. 
+https://github.com/oblitum/Interception
