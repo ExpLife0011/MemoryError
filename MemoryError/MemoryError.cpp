@@ -4423,7 +4423,7 @@ WPOINT ToMapFFPOINT2(FFPOINT ItemCoord) {
 								
 				FLOAT xx = (pl.x - ItemCoord.x);
 				FLOAT yy = (pl.y - ItemCoord.y);
-
+				 
 				endcalc.x = (center.x - xx* 0.0079f);
 				endcalc.y = (center.y + yy* 0.0079f);
 
@@ -9232,11 +9232,9 @@ BOOLEAN ClickInv_(DWORD item) {
 		//cout << resxl << ":" << resyt << endl;
 		if (screenp.x != 0 && screenp.y != 0 && screenp.x < 4000 && screenp.y < 4000) {
 			screenp.x = screenp.x - 7 + resxl; screenp.y = screenp.y - 7 +  resyt;
-			MoveMouse(screenp.x, screenp.y, 14, 20);
+			MoveMouse2(screenp.x, screenp.y, 14, 20);
 			RandomSleep2(25, 550, 3000);
-			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			RandomSleep2(100, 1050, 4000);
-			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			MouseLeftClick(100,1200);
 			return TRUE;
 		}
 	}
@@ -9262,14 +9260,12 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
-						MoveMouse(screenp.x, screenp.y, 14, 20);
+						MoveMouse2(screenp.x, screenp.y, 14, 20);
 						//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 						RandomSleep2(25, 550, 3000);
 						//hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 						//if (hover != hover2) {
-						mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-						RandomSleep2(100, 1050, 4000);
-						mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+						MouseLeftClick(90,1100);
 						return TRUE;
 						//}
 					}
@@ -9279,11 +9275,9 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-						MoveMouse(screenp.x, screenp.y, 4, 4);
+						MoveMouse2(screenp.x, screenp.y, 4, 4);
 						RandomSleep2(25, 550, 3000);
-						mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-						RandomSleep2(100, 1050, 4000);
-						mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+						MouseLeftClick(90, 1100);
 						return TRUE;
 					}
 				}
@@ -9297,14 +9291,12 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0 && minimap == 1) {
 						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
-						MoveMouse(screenp.x, screenp.y, 14, 20);
+						MoveMouse2(screenp.x, screenp.y, 14, 20);
 						//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 						RandomSleep2(25, 550, 3000);
 						//hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 						//if (hover != hover2) {
-						mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-						RandomSleep2(100, 1050, 4000);
-						mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+						MouseLeftClick(90, 1100);
 						return TRUE;
 						//}
 					}
@@ -9314,11 +9306,9 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
 					if (screenp.x != 0 && screenp.y != 0 && minimap == 2) {
 						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-						MoveMouse(screenp.x, screenp.y, 4, 4);
+						MoveMouse2(screenp.x, screenp.y, 4, 4);
 						RandomSleep2(25, 550, 3000);
-						mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-						RandomSleep2(100, 1050, 4000);
-						mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+						MouseLeftClick(90, 1100);
 						return TRUE;
 					}
 				}
