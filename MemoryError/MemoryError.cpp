@@ -9521,7 +9521,9 @@ VOID RandomSleep2(DWORD wait ,DWORD sleep, DWORD sleep2){
 
 //windoz api keyboard
 VOID KeyPress_(char mK) {
-	KeyboardPress(mK, 50,2000);
+	HKL kbl = GetKeyboardLayout(0);
+	//no idea how to get shift characters
+	KeyboardPress(MapVirtualKeyEx(VkKeyScanEx(mK, kbl), MAPVK_VK_TO_VSC, kbl), 100,2000);
 }
 
 POINT MousePos_() {
@@ -9861,9 +9863,8 @@ VOID KeyboardPress(char codes,WORD sleep, WORD rand) {
 		context = interception_create_context();
 		kstroke.state = INTERCEPTION_KEY_DOWN;
 		kstroke.information = 0;
-		WORD c = codes;
 		//
-		kstroke.code = c-59;
+		kstroke.code = codes;
 		interception_send(context, keyboard, (InterceptionStroke *)&kstroke, 1);
 	    Sleep(sleep + RandomGener2(rand));
 		kstroke.state = INTERCEPTION_KEY_UP;
