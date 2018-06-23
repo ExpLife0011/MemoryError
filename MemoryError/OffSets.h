@@ -111,7 +111,7 @@ WORD Itimeroff = 0x1a8;
 WORD Itimeroff2 = 0x150;
 //////////////////////////Interface2//////////////////////////////////////////////////
 //dif
-WORD I2off2 = 0x290;
+WORD I2off2 = 0x288;
 //points to text
 WORD I2off00 = 0xb8;
 //x
@@ -242,9 +242,9 @@ WORD gotheram = 0x24;
 WORD alloff1 = 0x70;
 //step
 WORD alloff2 = 0x1d0;
-//y
+//x -256.f)/512.f
 WORD alloff11 = 0x30;
-//x
+//y -256.f)/512.f
 WORD alloff22 = 0x38;
 //crc32
 WORD alloff44 = 0x60;
@@ -256,6 +256,8 @@ WORD alloff66 = 0x1a4;
 WORD alloff77 = 0x1c5;
 //backto all
 WORD alloff88 = 0x58;
+//current z height
+WORD alloff99 = 0x5c;
 
 
 

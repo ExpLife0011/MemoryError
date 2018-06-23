@@ -178,7 +178,7 @@ vector<WORD>Invxs;
 vector<WORD>Invys;
 vector<WORD> BoxMidsx(27);
 vector<WORD> BoxMidsy(27);
-vector<INT> InvSlot2;
+vector<BYTE> InvSlot2;
 vector<string> InvText;
 vector<DWORD> InvId;
 vector<DWORD> InvAm;
@@ -209,6 +209,8 @@ DWORD64 BANKArrPrev, BANKIArrPrev, LOOTArrPrev;
 DWORD64 DiviTemp,BankTemp, InvBoxMemoryLoc, MapBoxMemoryLoc,ProgTemp,ChooseITemp,ChooseTTemp,LootTemp,
 EqBoxMemoryLoc, PrayBoxMemoryLoc, SongBoxMemoryLoc, ChatBoxMemoryLoc, AbilBoxMemoryLoc, MenoBoxMemoryLoc,
 SkillRingBoxMemoryLoc, MIBoxMemoryLoc, MembBoxMemoryLoc, THBoxMemoryLoc, InterfTempMemoryLoc, UpTextTempMemoryLoc;
+//////////////////2///////////////////
+DWORD64 LootTemp2;
 //////////////////////////////////////
 DWORD64 TempBit,PrayBit,HPBit;
 //////////////////////////////////////
@@ -2716,7 +2718,7 @@ DWORD64 ScanPro()
 //dynamic inventory locating
 vector<DWORD64> ScanForInvArray()
 {
-
+	 
 	vector<DWORD64> results;
 	vector<DWORD64> results2;
 	//
@@ -2792,7 +2794,10 @@ vector<DWORD64> ScanForInvArray()
 
 		if (!BLOCK.empty()) {
 			BOOLEAN added=FALSE;
+			cout << dec << BLOCK.size() << endl;
 			for (WORD i = 0; i < BLOCK.size(); i++) {
+				cout <<"Start: "<<hex << BLOCK[i] << endl;
+				cout << "inv debug: "<< hex << results[i]-0x2e << endl;
 				if (results4.empty()) { results4.push_back(99); added = TRUE; }
 				for (WORD i2 = 0; i2 < results4.size(); i2++) {
 					if (results4[i2]== BLOCK[i]) {
@@ -3049,10 +3054,10 @@ vector<DWORD64> ScanForBankIArray()
 	return results3;
 }
 
-//dynamic loot window locating//slow
-vector<DWORD64> ScanForLootArray()
+//dynamic loot window locating//slow//just for testing//it seems whole stuff is same place as inventory
+vector<DWORD64> ScanForLootArray() 
 {
-
+	   
 	vector<DWORD64> results;
 	vector<DWORD64> results2;
 	///
@@ -3061,9 +3066,9 @@ vector<DWORD64> ScanForLootArray()
 	//
 	LOOTArr.clear();
 	//
-	WORD offset1 = 0x26;
-	WORD offset2 = 0x22;
-	WORD offset3 = 0xa;
+	WORD offset1 = 0x28;
+	WORD offset2 = 0x24;
+	WORD offset3 = 0x8;
 	// item ids
 	WORD offset4 = 0x1c2;
 	MEMss BlockA;
@@ -3071,8 +3076,11 @@ vector<DWORD64> ScanForLootArray()
 	DWORD64 ScanStart;
 	DWORD64 ScanEnd;
 
+	//56 06 05 00 0A 00 00 00
+	//0A 00 00 00 00 00 00 00 
+	//00 00 00 00 00 00 00 00
 	PatternSearch PS1{
-		0x00,0x00,0x56,0x06,0x05
+		0x56,0x06,0x05,0x0,0xa,0x0
 	};
 
 	//cout << "Lookin for \n";
@@ -3094,7 +3102,7 @@ vector<DWORD64> ScanForLootArray()
 			if (ScanEnd > RSExeStart) { ScanEnd = RSExeStart; }
 		}
 
-		PS1.SearchRemoteEx(proc, ScanStart, ScanEnd, results);
+		PS1.SearchRemoteWhole(proc, 0, 0, results);
 		if (results.empty()) { cout << "Found LOOTArr \n"; }
 
 		if (!results.empty()) {
@@ -3103,21 +3111,18 @@ vector<DWORD64> ScanForLootArray()
 			//loop for matches
 			for (DWORD i = 0; i < results.size(); i++) {
 
-				//check active
+				//check only active
 				DWORD v1 = VirtPReadDword(results[i] - offset1);
 				DWORD v2 = VirtPReadDword(results[i] - offset2);
-				WORD v4 = VirtPReadWord(results[i] + (offset3 - 4));
-				//end
-				DWORD v5 = VirtPReadDword(results[i] + offset3);
-				DWORD v6 = VirtPReadDword(results[i] + offset4);
+				DWORD64 v5 = VirtPRead64(results[i] + offset3);
+				DWORD64 v6 = VirtPRead64(results[i] + offset3+0x8);
 				//
-				if (v1 == 1 && v2 == 1
-					//&&
-					//v4 == 243
+				if (
+					v1 == 1 && v2 == 1
 					&&
 					v5 == 10
-					//&&
-					//v6 == 1511
+					&&
+					v6 == 0
 					) {
 					//BlockA = DeterMemoryBlockLenght(results[i]);
 					//cout << hex << BlockA.start << endl;
@@ -3130,7 +3135,7 @@ vector<DWORD64> ScanForLootArray()
 
 		if (!results2.empty()) {
 			for (DWORD i = 0; i < results2.size(); i++) {
-				results3.push_back(results2[i] - 0x2e);
+				results3.push_back(results2[i] - 0x2c);
 				i = i + 5;
 			}
 			LOOTArrPrev = results3[results3.size() / 2];;
@@ -3160,6 +3165,8 @@ vector<DWORD64> ScanForLootArray()
 	}
 	return results3;
 }
+
+
 
 //old
 //finds all and adds them to vector array, 100% matches only
@@ -3266,7 +3273,7 @@ vector<DWORD64> ScanInvIBank()
 }
 
 //finds all and adds them to vector array, 100% matches only
-//looks for inverntory interface and its size
+//looks for inventory interface and its size
 vector<DWORD64> ScanInvB(PatternSearch patern, char* TextToSay, vector<DWORD> offset, vector<WORD> byte2, vector<BOOLEAN> UpDown)
 {
 
@@ -3600,7 +3607,7 @@ VOID RefVarpBits1()
 				//
 				DWORD64 test1 = VirtPRead64(results[i1] - 0x18);
 				DWORD64 test2 = VirtPRead64(results[i1] - 0x20);
-				DWORD64 test3= VirtPRead64(results[i1] - 0x28);
+				DWORD64 test3 = VirtPRead64(results[i1] - 0x28);
 				DWORD64 test4 = VirtPRead64(results[i1] - 0x30);
 
 
@@ -3613,8 +3620,8 @@ VOID RefVarpBits1()
 					//craftin
 					//id==1251
 					//&& 
-					(ea11 == byte2 || ea11 == byte22)&&
-					(ea21 == byte2 || ea21 == byte22)&&
+					(ea11 == byte2 || ea11 == byte22) &&
+					(ea21 == byte2 || ea21 == byte22) &&
 					(ea31 == byte2 || ea31 == byte22) &&
 					(ea41 == byte2 || ea41 == byte22) &&
 					(ea51 == byte2 || ea51 == byte22) &&
@@ -3630,7 +3637,7 @@ VOID RefVarpBits1()
 
 				}
 				//58 size//2 looks like stats mostly/xp
-			    if (
+				if (
 					ea12 == byte2
 					&& ea22 == byte2
 					&& ea32 == byte2 && ea42 == byte2
@@ -3650,7 +3657,7 @@ VOID RefVarpBits1()
 					//results2id2.push_back(id);
 				}
 			}
-		}
+
 
 
 			//1           
@@ -3660,25 +3667,26 @@ VOID RefVarpBits1()
 				DWORD counter = 0;
 				DWORD blocksize = 0x30000;
 				BYTE overthis = 10;
-				for (DWORD i2 = 0; i2 < results21.size(); i2++) {					
+				for (DWORD i2 = 0; i2 < results21.size(); i2++) {
 					if (hold == 0) { hold = results21[i2]; };
 					if ((results21[i2] - hold) < blocksize) {
 						counter = counter + 1;
-					}else{
+					}
+					else {
 						//first hit
 						firsthit.push_back(hold);
 						//amount of hits
 						countafter.push_back(counter);
 						hold = 0;
-    					counter = 0;
+						counter = 0;
 					}
 				}
 
 				if (!firsthit.empty()) {
 					if (debug) { cout << "by density: " << dec << firsthit.size() << "\n"; }
 					for (DWORD i3 = 0; i3 < firsthit.size(); i3++) {
-						cout << "first1:" << hex << firsthit[i3] <<" count:"<<dec<< countafter[i3] << "\n";
-						if (countafter[i3]>overthis) {
+						cout << "first1:" << hex << firsthit[i3] << " count:" << dec << countafter[i3] << "\n";
+						if (countafter[i3] > overthis) {
 							filterhit.push_back(firsthit[i3]);
 						}
 					}
@@ -3716,7 +3724,7 @@ VOID RefVarpBits1()
 					if (debug) { cout << "by density2: " << dec << firsthit.size() << "\n"; }
 					for (DWORD i3 = 0; i3 < firsthit.size(); i3++) {
 						cout << "first2:" << hex << firsthit[i3] << " count2:" << dec << countafter[i3] << "\n";
-						if (countafter[i3]>overthis) {
+						if (countafter[i3] > overthis) {
 							filterhit.push_back(firsthit[i3]);
 						}
 					}
@@ -3725,6 +3733,7 @@ VOID RefVarpBits1()
 					VarBits2 = filterhit;
 				}
 			}
+		}
 	}
 }
 
@@ -4543,8 +4552,8 @@ DWORD64 SearchCompass()
 		DWORD64 ScanPlaceHolder = ScAdd1;
 		DWORD64 ScanStart;
 		DWORD64 ScanEnd;
-		DWORD64 ScanBack2 = 0x5000000;
-		DWORD64 ScanFoward2 = 0x50000000;
+		DWORD64 ScanBack2 = 0xf0000000;
+		DWORD64 ScanFoward2 = 0xf0000000;
 
 		if (ScanBack2 > ScanPlaceHolder) { ScanStart = 500000; }
 		else {
@@ -4555,7 +4564,10 @@ DWORD64 SearchCompass()
 
 		//still shorter than whole
 		//pat.SearchRemoteEx(proc, 50000, ScanEnd, results);
-		pat.SearchRemoteWhole(proc, false, 0, results);
+		if (Compass == 0) { pat.SearchRemoteWhole(proc, false, 0, results); }
+		else {
+			pat.SearchRemoteEx(proc, Compass- ScanStart, Compass+ ScanEnd, results);
+		}
 		if (results.empty()) { cout << "Found non compass \n"; }
 		if (!results.empty()) {
 			//cout << dec << results.size() << "\n";
@@ -5156,7 +5168,7 @@ VOID ReadInvArrays2()
 
 //filters out inventory items from found dynamic inv array data//constantly//read straight in//for debug make another general one
 VOID FilterInventory()
-{
+{  
 	Invx.clear();
 	Invy.clear();
 	//InvText.clear();
@@ -5183,7 +5195,7 @@ VOID FilterInventory()
 		for (DWORD i5 = 0; i5 < INVIArr.size(); i5++) {
 			//cout << hex << INVIArr << endl;
 			BlockA = DeterMemoryBlockLenght(INVIArr[i5]);
-			limit = 30000;
+			limit = 40000;
 			DWORD64 Sc = INVIArr[i5] - I2off2*(limit / 2);
 			for (DWORD i = 0; i < limit; i++) {
 				offh = offh + I2off2;
@@ -5212,7 +5224,7 @@ VOID FilterInventory()
 						DWORD ids = VirtPReadDword(Hold + I2offitemids);
 						if (ids == 0xffffffff) { ids = 0; }
 						InvId.push_back(ids);
-
+						
 
 
 
@@ -5221,6 +5233,94 @@ VOID FilterInventory()
 			}
 		}
 	}
+	if (Invx.size() != 28) { cout << "Inventory items broken" << endl; }
+}
+
+DWORD64 LootBox;
+//locate and keep an eye on lootbox, where it is in memory and is it open/closed
+VOID ScanLootBox(){
+
+	vector<DWORD64> results;
+	//56 06 00 00 04 00 FF FF 
+	//FF FF 00 00 00 00 00 00
+	//00 00 00 00 00 00 00 00
+	PatternSearch PS{
+		0x56, 0x06, 0x00, 0x00, 0x04, 0x00, 0xff, 0xff,
+		0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	};
+
+	if (!procIDs.empty())
+	{
+		if (LootBox!=NULL) {
+			PS.SearchRemoteWhole(proc, 0, 0, results);
+		}
+		else {
+
+		}
+		PS.SearchRemoteWhole(proc, 0, 0, results);
+		if (results.empty()) { cout << "Found non exe4 \n"; }
+		if (!results.empty()) {
+
+		}
+
+
+	}
+}
+
+//work in progress
+VOID FilterForLootArray() {
+
+
+	vector<DWORD64> SFLA=ScanForLootArray();
+	DWORD64 offh = 0;
+	INT limit = 0;
+	WPOINT box;
+	//closed box
+	//C5 05 00 00 8F 02 FF FF 8E 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 on main interfaces
+	//56 06 00 00 04 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 box
+	//56 06 00 00 1B 00 FF FF 0D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	//56 06 00 00 05 00 FF FF 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	//56 06 00 00 01 00 FF FF 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+	if (InterfCheck(LootTemp, 1477, 655, 0xffff, 654)) {
+		box = GetInterfaceData2(LootTemp).xy;
+	}
+	else {
+		LootTemp = Locateinterface(1477, 655, 0xffff, 654);
+	}
+
+	if (!INVIArr.empty()) {
+		for (DWORD i5 = 0; i5 < INVIArr.size(); i5++) {
+			//cout << hex << INVIArr << endl;
+			limit = 30000;
+			DWORD64 Sc = INVIArr[i5] - I2off2*(limit / 2);
+			for (DWORD i = 0; i < limit; i++) {
+				offh = offh + I2off2;
+				DWORD64 Hold = Sc + offh;
+
+				//active check
+				DWORD v1 = VirtPReadDword(Hold + I2off555);
+				DWORD v2 = VirtPReadDword(Hold + I2off666);
+				//
+				WORD v3 = VirtPReadWord(Hold + I2off55);
+				//
+				WORD v4 = VirtPReadWord(Hold + I2off55 + 2);
+				//
+				WORD v5 = VirtPReadWord(Hold + I2off55 + 4);
+				//
+				DWORD v7 = VirtPReadDword(Hold + I2off55 + 8);
+				if (v3 == 1622) {
+					cout << hex << Hold << ":" << VirtPReadWord(Hold + I2off55 + 6) << endl;
+				}
+			}
+		}
+	}
+
+
+
+
+
 }
 
 // filters out bank
@@ -5563,147 +5663,6 @@ VOID ReadGroundItemsArray2()
 	}
 }
 
-//finds ground item, returns true
-BOOLEAN FindGItemBool_(vector<DWORD> item) {
-	ReadCObjArrays();
-	//ReadGroundItemsArray2();
-	if (!GIID2.empty() && !item.empty()) {
-		for (DWORD i = 0; i < GIID2.size(); i++) {
-			for (DWORD ii = 0; ii < item.size(); ii++) {
-				if (GIID2[i] == item[ii]) {
-					return TRUE;
-				}
-			}
-		}
-	}
-	return FALSE;
-}
-
-// Grounditems click
-BOOLEAN FindGItem_(vector<DWORD> item, BYTE maxdistance, INT corx, INT cory, BYTE action, string sidetext) {
-
-	vector<FLOAT> MatchNPCsDist;
-	vector<FLOAT> MatchNPCsDist2;
-	vector<FLOAT> MatchNPCsDist3;
-	vector<DWORD64> MatchNPCsMBlock;
-	vector<DWORD64> MatchNPCsMBlock2;
-	vector<DWORD> MatchNPCsTimer;
-	vector<DWORD> MatchNPCsTimer2;
-	FFPOINT p = PlayerCoordFloatRaw();
-	FLOAT min = 51200.f;
-	//x
-	DWORD off11 = 0x15c;
-	//y
-	DWORD off22 = 0x160;
-	//hover
-	//DWORD off33 = 0x464;
-	DWORD hover;
-	DWORD hover2;
-	//xm
-	DWORD offxm = 0x88;
-	//ym
-	DWORD offym = 0x8c;
-	GetWindowRect(WProcC, &rs);
-	WORD resyt = rs.top;
-	WORD resxl = rs.left;
-	WORD resyy = GetRsResolution2().y;
-	//ReadCObjArrays();
-	//ReadGroundItemsArray2();
-
-	if (!GIID2.empty() && !item.empty()) {
-		for (DWORD i1 = 0; i1 < GIID2.size(); i1++) {
-			for (DWORD i2 = 0; i2 < item.size(); i2++) {
-				if (item[i1] != NULL || GIID2[i2] != NULL) {
-					if (GIID2[i2] == item[i1]) {
-						FLOAT dist = sqrt(pow(GIX2[i2] - p.x, 2) + pow(GIY2[i2] - p.y, 2)) + (0.001f*i2);
-						if (dist < maxdistance*512.f) {
-							MatchNPCsDist.push_back(dist);
-							MatchNPCsDist2.push_back(dist);
-							MatchNPCsMBlock.push_back(DecorMem[i2]);
-							MatchNPCsTimer.push_back(ViewPartialDecor[i2]);
-						}
-					}
-				}
-			}
-		}
-		//sort first dist by distance size
-		if (!MatchNPCsMBlock.empty()) {
-			sort(MatchNPCsDist.begin(), MatchNPCsDist.end());
-
-			//set memory blocks into order by dist and dist2
-			for (DWORD i = 0; i < MatchNPCsDist.size(); i++) {
-				for (DWORD ii = 0; ii < MatchNPCsDist2.size(); ii++) {
-					if (MatchNPCsDist[i] == MatchNPCsDist2[ii]) {
-						//should add closest memory block @ 0(first)
-						MatchNPCsMBlock2.push_back(MatchNPCsMBlock[ii]);
-						MatchNPCsDist3.push_back(MatchNPCsDist2[ii]);
-						MatchNPCsTimer2.push_back(MatchNPCsTimer[ii]);
-					}
-				}
-			}
-		}
-
-
-		BOOLEAN failed = FALSE;
-		if (!MatchNPCsMBlock2.empty()) {
-			for (DWORD loop = 0; loop < 25; loop++) {
-				Sleep(10);
-				for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
-					//try minimap/
-					if (i < MatchNPCsMBlock2.size()) { failed = TRUE; }
-					DWORD64 holder = VirtPRead64(MatchNPCsMBlock2[i] + alloff88);
-					DWORD part = VirtPReadDword(holder + alloff66);
-					if (MatchNPCsTimer2[i] != part) {
-						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + goffxm), VirtPReadWord(MatchNPCsMBlock2[i] + goffym) };
-						screenp.y = resyy - screenp.y;
-						if (ScreenFilter(screenp)) {
-							screenp.x = screenp.x - 7 + corx + resxl;
-							screenp.y = screenp.y - 7 + cory + resyt;
-							if (action == 0) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
-								RandomSleep2(25, 550, 3000);
-								if (SideTextEq(sidetext)) {
-									MouseLeftClick(50, 2000);
-									return TRUE;
-								}
-							}
-							if (action == 1) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
-								RandomSleep2(25, 550, 3000);
-								if (SideTextEq(sidetext)) {
-									MouseRightClick(50, 2000);
-									return TRUE;
-								}
-							}
-							if (action == 2) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
-								RandomSleep2(25, 550, 3000);
-								if (SideTextEq(sidetext)) {
-									return TRUE;
-								}
-							}
-							if (action == 3) {
-								return TRUE;
-							}
-						}
-					}
-				}
-			}
-			if (failed == TRUE) {
-				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(MatchNPCsMBlock2[0] + aooff11)*512.f,VirtPReadWord(MatchNPCsMBlock2[0] + aooff22)*512.f });
-				if (screenp.x != 0 && screenp.y != 0) {
-					screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-					MoveMouse2(screenp.x, screenp.y, 4, 4);
-					RandomSleep2(30, 1150, 5000);
-					MouseLeftClick(50, 2000);
-					return TRUE;
-				}
-			}
-		}
-	}
-	return FALSE;
-}
-
 //interfaces debug//IF/boxes//main interfaces 1
 VOID ReadInterf()
 {
@@ -5779,7 +5738,7 @@ VOID ReadInterf()
 
 					//directly points to other array
 					DWORD64 placeholder = VirtPRead64(Hold + Itimeroff);
-					//timer!!/dosent wor, sometimes :I
+					//timer!!/dosent work sometimes :I
 					DWORD OtherT = VirtPReadDword(placeholder + Itimeroff2);
 					InterfTimer.push_back(OtherT);
 
@@ -6948,7 +6907,7 @@ VOID ReadCObjArrays()
 						if (Type==0) {
 							//test somekind boolean
 							BYTE bb5 = VirtPReadByte(PlaceHolder + aooff77);
-							if (bb5 == 0) {
+							//if (bb5 == 0) {
 								//active check
 								BYTE b3 = VirtPReadByte(PlaceHolder + aooff55);
 								BYTE b4 = VirtPReadByte(PlaceHolder + aooff66);
@@ -6994,7 +6953,7 @@ VOID ReadCObjArrays()
 											ViewPartialObjects.push_back(part);
 											ViewFullObjects.push_back(full);
 										//}
-									}
+								//	}
 								}
 							//}
 						}
@@ -7103,6 +7062,135 @@ VOID ReadCObjArrays()
 	}
 } 
 
+//finds ground item, returns true
+BOOLEAN FindGItemBool_(vector<DWORD> item) {
+	ReadCObjArrays();
+	//ReadGroundItemsArray2();
+	if (!GIID2.empty() && !item.empty()) {
+		for (DWORD i = 0; i < GIID2.size(); i++) {
+			for (DWORD ii = 0; ii < item.size(); ii++) {
+				if (GIID2[i] == item[ii]) {
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
+}
+
+// Grounditems click
+BOOLEAN FindGItem_(vector<DWORD> item, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
+
+	vector<FLOAT> MatchNPCsDist;
+	vector<FLOAT> MatchNPCsDist2;
+	vector<FLOAT> MatchNPCsDist3;
+	vector<DWORD64> MatchNPCsMBlock;
+	vector<DWORD64> MatchNPCsMBlock2;
+	vector<DWORD> MatchNPCsTimer;
+	vector<DWORD> MatchNPCsTimer2;
+	FFPOINT p = PlayerCoordFloatRaw();
+	GetWindowRect(WProcC, &rs);
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
+	ReadCObjArrays();
+	//ReadGroundItemsArray2();
+
+	if (!item.empty() && !GIID2.empty()) {
+		for (DWORD i1 = 0; i1 < item.size(); i1++) {
+			for (DWORD i2 = 0; i2 < GIID2.size(); i2++) {
+				if (item[i1] != NULL && GIID2[i2] != NULL) {
+					if (GIID2[i2] == item[i1]) {
+						FLOAT dist = sqrt(pow(GIX2[i2] - p.x, 2) + pow(GIY2[i2] - p.y, 2)) + (0.1f*i2);
+						if (dist < maxdistance*512.f) {
+							MatchNPCsDist.push_back(dist);
+							MatchNPCsDist2.push_back(dist);
+							MatchNPCsMBlock.push_back(GIMem2[i2]);
+							MatchNPCsTimer.push_back(ViewPartialGI[i2]);
+						}
+					}
+				}
+			}
+		}
+		//sort first dist by distance size
+		if (!MatchNPCsMBlock.empty()) {
+			sort(MatchNPCsDist.begin(), MatchNPCsDist.end());
+
+			//set memory blocks into order by dist and dist2
+			for (DWORD i = 0; i < MatchNPCsDist.size(); i++) {
+				for (DWORD ii = 0; ii < MatchNPCsDist2.size(); ii++) {
+					if (MatchNPCsDist[i] == MatchNPCsDist2[ii]) {
+						//should add closest memory block @ 0(first)
+						MatchNPCsMBlock2.push_back(MatchNPCsMBlock[ii]);
+						MatchNPCsDist3.push_back(MatchNPCsDist2[ii]);
+						MatchNPCsTimer2.push_back(MatchNPCsTimer[ii]);
+					}
+				}
+			}
+		}
+
+		BOOLEAN failed = FALSE;
+		if (!MatchNPCsMBlock2.empty()) {
+			for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
+				//try every block some (random) amount of times before moving onto next block
+				for (DWORD loop = 0; loop < rand() % 5 + 1; loop++) {
+					DWORD64 holder = VirtPRead64(MatchNPCsMBlock2[i] + alloff88);
+					DWORD part = VirtPReadDword(holder + alloff66);
+					if (MatchNPCsTimer2[i] != part) {
+						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + goffxm), VirtPReadWord(MatchNPCsMBlock2[i] + goffym) };
+						screenp.y = resyy - screenp.y;
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
+							if (action == 0) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseLeftClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 1) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseRightClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 2) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									runsNPC = 0;
+									return TRUE;
+								}
+							}
+							if (action == 3) {
+								return TRUE;
+							}
+						}
+					}
+				}
+				//try minimap
+			}
+			if (usemap == TRUE) {
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock2[0] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock2[0] + npcoff22) - 256.f });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(50, 2000);
+					return TRUE;
+				}
+			}
+		}
+	}
+
+	//	}
+	return FALSE;
+}
+
 //max distance from player, array objects, ALL objects
 BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 
@@ -7126,7 +7214,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 	if (!obj.empty() && !ObjID.empty()) {
 		for (DWORD ii = 0; ii < obj.size(); ii++) {
 			for (DWORD i = 0; i < ObjID.size(); i++) {
-				if (obj[ii] != NULL || ObjID[i] != NULL) {
+				if (obj[ii] != NULL && ObjID[i] != NULL) {
 					if (ObjID[i] == obj[ii]) {
 						FLOAT dist = sqrt(pow(ObjX[i] - p.x, 2) + pow(ObjY[i] - p.y, 2));
 						if (dist < maxdistance*512.f) {
@@ -7162,7 +7250,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 						WPOINT screenp = TToScreen2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
 						if (ScreenFilter(screenp)) {
 							screenp.x = screenp.x - 7; screenp.y = screenp.y -7;
-							MoveMouse2(screenp.x, screenp.y, 14, 20);
+							MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 							//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
 							RandomSleep2(25, 550, 3000);
 							//hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
@@ -7177,7 +7265,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 						WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock[i] + off11) - 256.f,VirtPReadFloat(MatchNPCsMBlock[i] + off22) - 256.f });
 						if (screenp.x != 0 && screenp.y != 0) {
 							screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-							MoveMouse2(screenp.x, screenp.y, 4, 4);
+							MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
 							RandomSleep2(25, 550, 3000);
 							MouseRightClick(50, 2000);
 							return TRUE;
@@ -7191,7 +7279,7 @@ BOOLEAN FindSObj(vector<DWORD> obj, BYTE maxdistance) {
 }
 
 // max distance from player, array objects, active
-BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cormx, INT cormy, BOOLEAN usemap, BYTE action, string sidetext) {
+BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
 
 	vector<FLOAT> MatchNPCsDist;
 	vector<FLOAT> MatchNPCsDist2;
@@ -7213,7 +7301,7 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 	if (!obj.empty() && !ObjectsID.empty()) {
 		for (DWORD i1 = 0; i1 < obj.size(); i1++) {
 			for (DWORD i2 = 0; i2 < ObjectsID.size(); i2++) {
-				if (obj[i1] != NULL || ObjectsID[i2] != NULL) {
+				if (obj[i1] != NULL && ObjectsID[i2] != NULL) {
 					if (ObjectsID[i2] == obj[i1]) {
 						FLOAT dist = sqrt(pow(ObjectsXf[i2] - p.x, 2) + pow(ObjectsYf[i2] - p.y, 2)) + (0.1f*i2);
 						if (dist < maxdistance*512.f) {
@@ -7254,10 +7342,10 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + aooffxm), VirtPReadWord(MatchNPCsMBlock2[i] + aooffym) };
 						screenp.y = resyy - screenp.y;
 						if (ScreenFilter(screenp)) {
-							screenp.x = screenp.x - 7 + corx + resxl;
-							screenp.y = screenp.y - 7 + cory + resyt;
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
 							if (action == 0) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseLeftClick(50, 2000);
@@ -7265,7 +7353,7 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 								}
 							}
 							if (action == 1) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseRightClick(50, 2000);
@@ -7273,7 +7361,7 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 								}
 							}
 							if (action == 2) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									return TRUE;
@@ -7286,13 +7374,12 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 					}
 				}
 				//try minimap
-				if (i < MatchNPCsMBlock2.size()) { failed = TRUE; }
 			}
-			if (failed == TRUE && usemap == TRUE) {
+			if ( usemap == TRUE) {
 				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(MatchNPCsMBlock2[0] + aooff11)*512.f,VirtPReadWord(MatchNPCsMBlock2[0] + aooff22)*512.f });
 				if (screenp.x != 0 && screenp.y != 0) {
-					screenp.x = screenp.x - 4 + cormx; screenp.y = screenp.y - 4 + cormy;
-					MoveMouse2(screenp.x, screenp.y, 4, 4);
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
 					RandomSleep2(25, 550, 3000);
 					MouseLeftClick(50, 2000);
 					return TRUE;
@@ -7303,8 +7390,203 @@ BOOLEAN FindAObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory,INT cor
 	return FALSE;
 }
 
-// max distance from player, array decor
-BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT cormx, INT cormy, BOOLEAN usemap, BYTE action, string sidetext) {
+//x1-x2,y1-y2 object static location, z1-z2 changing height realtime
+BOOLEAN FindAObj2(vector<DWORD> obj, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext,
+	POINT x12, POINT y12, BOOLEAN height) {
+
+	vector<FLOAT> MatchNPCsDist;
+	vector<FLOAT> MatchNPCsDist2;
+	vector<FLOAT> MatchNPCsDist3;
+	vector<DWORD64> MatchNPCsMBlock;
+	vector<DWORD64> MatchNPCsMBlock2;
+	vector<DWORD> MatchNPCsTimer;
+	vector<DWORD> MatchNPCsTimer2;
+	FFPOINT p = PlayerCoordFloatRaw();
+	GetWindowRect(WProcC, &rs);
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
+
+	//cout << "test";
+	ReadCObjArrays();
+	//add all matching ids to separate aray
+	//as it should take milliseconds to go trough all, do distance aswell
+	if (!obj.empty() && !ObjectsID.empty()) {
+
+		for (DWORD i1 = 0; i1 < obj.size(); i1++) {
+			for (DWORD i2 = 0; i2 < ObjectsID.size(); i2++) {
+				if (obj[i1] != NULL && ObjectsID[i2] != NULL) {
+					if (ObjectsID[i2] == obj[i1]) {
+						DWORD64 holder = VirtPRead64(ObjectsMem[i2] + alloff88);
+						INT xf = (VirtPReadFloatAll(holder + alloff11)-256.f)/512.f;
+						INT yf = (VirtPReadFloatAll(holder + alloff22)- 256.f)/512.f;
+						INT hf = VirtPReadFloatAll(holder + alloff99);
+						//if zeros and set to passing values, ignoring basicaly then
+						if (0 == x12.x && 0 == y12.x) { xf = 0; }
+						if (xf >= x12.x && xf <= y12.x) {
+							//if zeros and set to passing values, ignoring basicaly then
+							if (0 == x12.y && 0 == y12.y) { yf = 0; }
+							if (yf >= x12.y && yf <= y12.y) {
+								// set 1 if false to ignore
+								if (!height) { hf = 1; }
+								if (hf > 0) {
+
+									FLOAT dist = sqrt(pow(ObjectsXf[i2] - p.x, 2) + pow(ObjectsYf[i2] - p.y, 2)) + (0.1f*i2);
+									if (dist < maxdistance*512.f) {
+										MatchNPCsDist.push_back(dist);
+										MatchNPCsDist2.push_back(dist);
+										MatchNPCsMBlock.push_back(ObjectsMem[i2]);
+										MatchNPCsTimer.push_back(ViewPartialObjects[i2]);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+			
+		//sort first dist by distance size
+		if (!MatchNPCsMBlock.empty()) {
+			sort(MatchNPCsDist.begin(), MatchNPCsDist.end());
+
+			//set memory blocks into order by dist and dist2
+			for (DWORD i = 0; i < MatchNPCsDist.size(); i++) {
+				for (DWORD ii = 0; ii < MatchNPCsDist2.size(); ii++) {
+					if (MatchNPCsDist[i] == MatchNPCsDist2[ii]) {
+						//should add closest memory block @ 0(first)
+						MatchNPCsMBlock2.push_back(MatchNPCsMBlock[ii]);
+						MatchNPCsDist3.push_back(MatchNPCsDist2[ii]);
+						MatchNPCsTimer2.push_back(MatchNPCsTimer[ii]);
+					}
+				}
+			}
+		}
+
+		BOOLEAN failed = FALSE;
+		if (!MatchNPCsMBlock2.empty()) {
+			for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
+				//try every block some (random) amount of times before moving onto next block
+				for (DWORD loop = 0; loop < rand() % 5 + 1; loop++) {
+					DWORD64 holder = VirtPRead64(MatchNPCsMBlock2[i] + alloff88);
+					DWORD part = VirtPReadDword(holder + alloff66);
+					if (MatchNPCsTimer2[i] != part) {
+						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + aooffxm), VirtPReadWord(MatchNPCsMBlock2[i] + aooffym) };
+						screenp.y = resyy - screenp.y;
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
+							if (action == 0) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseLeftClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 1) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseRightClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 2) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									return TRUE;
+								}
+							}
+							if (action == 3) {
+								return TRUE;
+							}
+						}
+					}
+				}
+				//try minimap
+			}
+			if (usemap == TRUE) {
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(MatchNPCsMBlock2[0] + aooff11)*512.f,VirtPReadWord(MatchNPCsMBlock2[0] + aooff22)*512.f });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(50, 2000);
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
+}
+
+//find out if the tile is empty, for firemaking or placing a object
+BOOLEAN CheckTile_(BYTE maxdistance, POINT xy, BOOLEAN z1) {
+
+	FFPOINT p = PlayerCoordFloatRaw();
+	WORD count1 = 0;
+	WORD count2 = 0;
+
+	ReadCObjArrays();
+	//check ObjectsID and DecorID
+	if (!DecorID.empty() && !ObjectsID.empty()) {
+
+		for (DWORD i = 0; i < DecorID.size(); i++) {
+			FLOAT dist = sqrt(pow(DecorXf[i] - p.x, 2) + pow(DecorYf[i] - p.y, 2)) + (0.1f*i);
+			if (dist < maxdistance*512.f) {
+				DWORD64 holder = VirtPRead64(DecorMem[i] + alloff88);
+				WORD xf = (VirtPReadFloatAll(holder + alloff11) - 256.f) / 512.f;
+				WORD yf = (VirtPReadFloatAll(holder + alloff22) - 256.f) / 512.f;
+				INT hf = VirtPReadFloatAll(holder + alloff99);
+				if (xf==xy.x && yf==xy.y) {
+					//cout << "not empty1" << endl;
+					//check for height
+					if (z1) {
+						if (hf>0.f) {
+							count1++;
+						}
+					}
+					//ignore height and add anyway
+					else {
+						count1++;
+					}
+				}
+			}
+		}
+
+		for (DWORD i = 0; i < ObjectsID.size(); i++) {
+			FLOAT dist = sqrt(pow(ObjectsXf[i] - p.x, 2) + pow(ObjectsYf[i] - p.y, 2)) + (0.1f*i);
+			if (dist < maxdistance*512.f) {
+				DWORD64 holder = VirtPRead64(ObjectsMem[i] + alloff88);
+				WORD xf = (VirtPReadFloatAll(holder + alloff11) - 256.f) / 512.f;
+				WORD yf = (VirtPReadFloatAll(holder + alloff22) - 256.f) / 512.f;
+				INT hf = VirtPReadFloatAll(holder + alloff99);
+				if (xf == xy.x && yf == xy.y) {
+					//cout << "not empty2" << endl;
+					//check for height
+					if (z1) {
+						if (hf>0.f) {
+							count2++;
+						}
+					}
+					//ignore height and add anyway
+					else {
+						count2++;
+					}
+				}
+			}
+		}
+		if (count1 > 0 || count2 > 0) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+// max distance from player, array decor, click
+BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
 
 	vector<FLOAT> MatchNPCsDist;
 	vector<FLOAT> MatchNPCsDist2;
@@ -7327,7 +7609,7 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT co
 	if (!obj.empty() && !DecorID.empty()) {
 		for (DWORD i1 = 0; i1 < obj.size(); i1++) {
 			for (DWORD i2 = 0; i2 < DecorID.size(); i2++) {
-				if (obj[i1] != NULL || DecorID[i2] != NULL) {
+				if (obj[i1] != NULL && DecorID[i2] != NULL) {
 					if (DecorID[i2] == obj[i1]) {
 						FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
 						if (dist < maxdistance*512.f) {
@@ -7370,10 +7652,10 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT co
 						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + dooffxm), VirtPReadWord(MatchNPCsMBlock2[i] + dooffym) };
 						screenp.y = resyy - screenp.y;
 						if (ScreenFilter(screenp)) {
-							screenp.x = screenp.x - 7 + corx + resxl;
-							screenp.y = screenp.y - 7 + cory + resyt;
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
 							if (action == 0) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseLeftClick(50, 2000);
@@ -7381,7 +7663,7 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT co
 								}
 							}
 							if (action == 1) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseRightClick(50, 2000);
@@ -7389,7 +7671,7 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT co
 								}
 							}
 							if (action == 2) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									return TRUE;
@@ -7402,13 +7684,454 @@ BOOLEAN FindDObj(vector<DWORD> obj, BYTE maxdistance, INT corx, INT cory, INT co
 					}
 				}
 				//try minimap
-				if (i < MatchNPCsMBlock2.size()) { failed = TRUE; }
 			}
-			if (failed == TRUE && usemap==TRUE) {
+			if (usemap==TRUE) {
 				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(MatchNPCsMBlock2[0] + dooff11)*512.f,VirtPReadWord(MatchNPCsMBlock2[0] + dooff22)*512.f });
 				if (screenp.x != 0 && screenp.y != 0) {
-					screenp.x = screenp.x - 4+cormx; screenp.y = screenp.y - 4+cormy;
-					MoveMouse2(screenp.x, screenp.y, 4, 4);
+					screenp.x = screenp.x - 4+mxy.x; screenp.y = screenp.y - 4+mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(50, 2000);
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
+}
+
+// max distance from player, array decor, click,test height
+BOOLEAN FindDObj2(vector<DWORD> obj, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext,
+	POINT x12, POINT y12, BOOLEAN height) {
+
+	vector<FLOAT> MatchNPCsDist;
+	vector<FLOAT> MatchNPCsDist2;
+	vector<FLOAT> MatchNPCsDist3;
+	vector<DWORD64> MatchNPCsMBlock;
+	vector<DWORD64> MatchNPCsMBlock2;
+	vector<DWORD> MatchNPCsTimer;
+	vector<DWORD> MatchNPCsTimer2;
+	FFPOINT p = PlayerCoordFloatRaw();
+	GetWindowRect(WProcC, &rs);
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
+
+	//cout << "test";
+	//ReadDecorObj();
+	ReadCObjArrays();
+	//add all matching ids to separate aray
+	//as it should take milliseconds to go trough all, do distance aswell
+	if (!obj.empty() && !DecorID.empty()) {
+		for (DWORD i1 = 0; i1 < obj.size(); i1++) {
+			for (DWORD i2 = 0; i2 < DecorID.size(); i2++) {
+				if (obj[i1] != NULL && DecorID[i2] != NULL) {
+					if (DecorID[i2] == obj[i1]) {
+						DWORD64 holder = VirtPRead64(DecorMem[i2] + alloff88);
+						INT xf = (VirtPReadFloatAll(holder + alloff11) - 256.f) / 512.f;
+						INT yf = (VirtPReadFloatAll(holder + alloff22) - 256.f) / 512.f;
+						INT hf = VirtPReadFloatAll(holder + alloff99);
+						//if zeros and set to passing values, ignoring basicaly then
+						if (0 == x12.x && 0 == y12.x) { xf = 0; }
+						if (xf >= x12.x && xf <= y12.x) {
+							//if zeros and set to passing values, ignoring basicaly then
+							if (0 == x12.y && 0 == y12.y) { yf = 0; }
+							if (yf >= x12.y && yf <= y12.y) {
+								// set 1 if false to ignore
+								if (!height) { hf = 1; }
+								if (hf > 0) {
+									FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
+									if (dist < maxdistance*512.f) {
+										MatchNPCsDist.push_back(dist);
+										MatchNPCsDist2.push_back(dist);
+										MatchNPCsMBlock.push_back(DecorMem[i2]);
+										MatchNPCsTimer.push_back(ViewPartialDecor[i2]);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//sort first dist by distance size
+		if (!MatchNPCsMBlock.empty()) {
+			sort(MatchNPCsDist.begin(), MatchNPCsDist.end());
+
+			//set memory blocks into order by dist and dist2
+			for (DWORD i = 0; i < MatchNPCsDist.size(); i++) {
+				for (DWORD ii = 0; ii < MatchNPCsDist2.size(); ii++) {
+					if (MatchNPCsDist[i] == MatchNPCsDist2[ii]) {
+						//should add closest memory block @ 0(first)
+						MatchNPCsMBlock2.push_back(MatchNPCsMBlock[ii]);
+						MatchNPCsDist3.push_back(MatchNPCsDist2[ii]);
+						MatchNPCsTimer2.push_back(MatchNPCsTimer[ii]);
+					}
+				}
+			}
+		}
+
+
+		BOOLEAN failed = FALSE;
+		if (!MatchNPCsMBlock2.empty()) {
+			for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
+				//try every block some (random) amount of times before moving onto next block
+				for (DWORD loop = 0; loop < rand() % 5 + 1; loop++) {
+					DWORD64 holder = VirtPRead64(MatchNPCsMBlock2[i] + alloff88);
+					DWORD part = VirtPReadDword(holder + alloff66);
+					if (MatchNPCsTimer2[i] != part) {
+						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + dooffxm), VirtPReadWord(MatchNPCsMBlock2[i] + dooffym) };
+						screenp.y = resyy - screenp.y;
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
+							if (action == 0) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseLeftClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 1) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseRightClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 2) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									return TRUE;
+								}
+							}
+							if (action == 3) {
+								return TRUE;
+							}
+						}
+					}
+				}
+				//try minimap
+			}
+			if (usemap == TRUE) {
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(MatchNPCsMBlock2[0] + dooff11)*512.f,VirtPReadWord(MatchNPCsMBlock2[0] + dooff22)*512.f });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(50, 2000);
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
+}
+
+//was thinking bringing coordinates out, but its seems to be a waste
+//max distance from player, array decor, compares distance between 2 objects,1 is min and 2 is max and clicks on first object if distance is between
+BOOLEAN Comp2DObj(DWORD obj, DWORD obj2, BYTE maxdistance, BYTE objdistance1,BYTE objdistance2, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
+
+	vector<FLOAT> MatchObjects11Dist;
+	vector<FLOAT> MatchObjects22Dist;
+	vector<FLOAT> MatchObjects111Dist;
+	vector<FLOAT> MatchObjects222Dist;
+	vector<DWORD64> MatchObjectsMBlock;
+	vector<DWORD64> MatchObjectsMBlock2;
+	vector<DWORD> MatchObjectsTimer;
+	vector<DWORD> MatchObjectsTimer2;
+	vector<FLOAT>MatchObjects33Dist;
+	vector<FLOAT>MatchObjects44Dist;
+	vector<DWORD64>MatchObjectsMBlock3;
+	vector<DWORD>MatchObjectsTimer3;
+	vector<DWORD64>FinalObjectsMBlock;
+	vector<DWORD>FinalObjectsTimer;
+
+	FFPOINT p = PlayerCoordFloatRaw();
+	GetWindowRect(WProcC, &rs);
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
+
+	ReadCObjArrays();
+	//find first object and second
+	if (obj!=NULL && obj2!= NULL && !DecorID.empty()) {
+		for (DWORD i2 = 0; i2 < DecorID.size(); i2++) {
+			if (obj != NULL && obj2 != NULL && DecorID[i2] != NULL) {
+				if (DecorID[i2] == obj) {
+					//first
+					FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
+					if (dist < maxdistance*512.f) {
+						MatchObjects11Dist.push_back(dist);
+						MatchObjects111Dist.push_back(dist);
+						MatchObjectsMBlock.push_back(DecorMem[i2]);
+						MatchObjectsTimer.push_back(ViewPartialDecor[i2]);
+					}
+				}
+				//second
+				if (DecorID[i2] == obj2) {
+					FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
+					if (dist < maxdistance*512.f) {
+						MatchObjects22Dist.push_back(dist);
+						MatchObjects222Dist.push_back(dist);
+						MatchObjectsMBlock2.push_back(DecorMem[i2]);
+						MatchObjectsTimer2.push_back(ViewPartialDecor[i2]);
+
+					}
+				}
+			}
+		}
+		//compare distance between 2 objects
+			if (MatchObjects11Dist.empty()&& MatchObjects22Dist.empty()) {
+				for (WORD i3 = 0; i3 < MatchObjects11Dist.size(); i3++) {
+					for (WORD i4 = 0; i4 < MatchObjects22Dist.size(); i4++) {
+	
+						FLOAT dist = sqrt(pow((VirtPReadWord(MatchObjectsMBlock[i3] + dooff11)*512.f) - (VirtPReadWord(MatchObjectsMBlock2[i4] + dooff11)*512.f), 2)
+							+ ((VirtPReadWord(MatchObjectsMBlock[i3] + dooff22)*512.f) - (VirtPReadWord(MatchObjectsMBlock2[i4] + dooff22)*512.f), 2)) + (0.1f*i3);
+
+						//add second object if dist fits between
+						if (dist>objdistance1 && dist<objdistance2) {
+							MatchObjects33Dist.push_back(dist);
+							MatchObjects44Dist.push_back(dist);
+							MatchObjectsMBlock3.push_back(MatchObjectsMBlock[i3]);
+							MatchObjectsTimer3.push_back(MatchObjectsTimer[i3]);
+						}
+					}
+				}
+			}
+
+
+		//sort dist by distance size
+		if (!MatchObjects33Dist.empty()) {
+			sort(MatchObjects33Dist.begin(), MatchObjects33Dist.end());
+
+			//set memory blocks into order
+			for (WORD i = 0; i < MatchObjects33Dist.size(); i++) {
+				for (WORD ii = 0; ii < MatchObjects44Dist.size(); ii++) {
+					if (MatchObjects33Dist[i] == MatchObjects44Dist[ii]) {
+						//should add closest memory block @ 0(first)
+						FinalObjectsMBlock.push_back(MatchObjectsMBlock3[ii]);
+						FinalObjectsTimer.push_back(MatchObjectsTimer3[ii]);
+					}
+				}
+			}
+		}
+
+
+		BOOLEAN failed = FALSE;
+		if (!FinalObjectsMBlock.empty()) {
+			for (WORD i = 0; i < FinalObjectsMBlock.size(); i++) {
+				//try every block some (random) amount of times before moving onto next block
+				for (WORD loop = 0; loop < rand() % 8 + 1; loop++) {
+					DWORD64 holder = VirtPRead64(FinalObjectsMBlock[i] + alloff88);
+					DWORD part = VirtPReadDword(holder + alloff66);
+					if (FinalObjectsTimer[i] != part) {
+						WPOINT screenp = { VirtPReadWord(FinalObjectsMBlock[i] + dooffxm), VirtPReadWord(FinalObjectsMBlock[i] + dooffym) };
+						screenp.y = resyy - screenp.y;
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
+							if (action == 0) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseLeftClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 1) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseRightClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 2) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									return TRUE;
+								}
+							}
+							if (action == 3) {
+								return TRUE;
+							}
+						}
+					}
+				}
+			}
+			//try minimap
+			if (usemap == TRUE) {
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(FinalObjectsMBlock[0] + dooff11)*512.f,VirtPReadWord(FinalObjectsMBlock[0] + dooff22)*512.f });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(50, 2000);
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
+}
+
+//very specific, for citadel kiln
+BOOLEAN CompNonDObj(DWORD obj, DWORD obj2, BYTE maxdistance, BYTE objdistance1, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
+
+	vector<FLOAT> MatchObjects11Dist;
+	vector<FLOAT> MatchObjects22Dist;
+	vector<FLOAT> MatchObjects111Dist;
+	vector<FLOAT> MatchObjects222Dist;
+	vector<DWORD64> MatchObjectsMBlock;
+	vector<DWORD64> MatchObjectsMBlock2;
+	vector<DWORD> MatchObjectsTimer;
+	vector<DWORD> MatchObjectsTimer2;
+
+	vector<DWORD64>FinalObjectsMBlock;
+	vector<DWORD>FinalObjectsTimer;
+	vector<DWORD64>TrackObjectsMBlock;
+
+
+	FFPOINT p = PlayerCoordFloatRaw();
+	GetWindowRect(WProcC, &rs);
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
+
+	ReadCObjArrays();
+	//find first object and second
+	if (obj != NULL && obj2 != NULL && !DecorID.empty()) {
+		for (DWORD i2 = 0; i2 < DecorID.size(); i2++) {
+			if (obj != NULL && obj2 != NULL && DecorID[i2] != NULL) {
+				if (DecorID[i2] == obj) {
+					//first
+					FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
+					if (dist < maxdistance*512.f) {
+						MatchObjects11Dist.push_back(dist);
+						MatchObjects111Dist.push_back(dist);
+						MatchObjectsMBlock.push_back(DecorMem[i2]);
+						MatchObjectsTimer.push_back(ViewPartialDecor[i2]);
+					}
+				}
+				//second
+				if (DecorID[i2] == obj2) {
+					DWORD64 holder = VirtPRead64(DecorMem[i2] + alloff88);
+					FLOAT height = VirtPReadFloat(holder + alloff99);
+					FLOAT dist = sqrt(pow(DecorXf[i2] - p.x, 2) + pow(DecorYf[i2] - p.y, 2)) + (0.1f*i2);
+					if (dist < maxdistance*512.f && height>0.f) {
+						MatchObjects22Dist.push_back(dist);
+						MatchObjects222Dist.push_back(dist);
+						MatchObjectsMBlock2.push_back(DecorMem[i2]);
+						MatchObjectsTimer2.push_back(ViewPartialDecor[i2]);
+
+					}
+				}
+			}
+		}
+		//cout <<"start: "<< MatchObjectsMBlock.size() << endl;
+		//compare distance between 2 objects
+		if (!MatchObjects11Dist.empty() && !MatchObjects22Dist.empty()) {
+			for (WORD i3 = 0; i3 < MatchObjects11Dist.size(); i3++) {
+				for (WORD i4 = 0; i4 < MatchObjects22Dist.size(); i4++) {
+
+					FLOAT dist = sqrt(pow((VirtPReadWord(MatchObjectsMBlock[i3] + dooff22)*512.f) - (VirtPReadWord(MatchObjectsMBlock2[i4] + dooff22)*512.f), 2)
+						+ ((VirtPReadWord(MatchObjectsMBlock[i3] + dooff11)*512.f) - (VirtPReadWord(MatchObjectsMBlock2[i4] + dooff11)*512.f), 2)) + (0.1f*i3);
+					//dist in tiles
+					if (dist < objdistance1*512.f) {					
+
+						TrackObjectsMBlock.push_back(MatchObjectsMBlock[i3]);
+
+						break;
+					}
+
+				}
+			}
+		}
+		//delete those marked up
+		for (WORD i5 = 0; i5 < MatchObjectsMBlock.size(); i5++) {
+			for (WORD i6 = 0; i6 < TrackObjectsMBlock.size(); i6++) {
+				if (MatchObjectsMBlock[i5] == TrackObjectsMBlock[i6]) {
+					MatchObjects11Dist.erase(MatchObjects11Dist.begin() + (i5));
+					MatchObjects111Dist.erase(MatchObjects111Dist.begin() + (i5));
+					MatchObjectsMBlock.erase(MatchObjectsMBlock.begin() + (i5));
+					MatchObjectsTimer.erase(MatchObjectsTimer.begin() + (i5));
+				}
+			}
+		}
+
+		//cout <<"end: "<< MatchObjectsMBlock.size() << endl;
+		//sort dist by distance size
+			if (!MatchObjects11Dist.empty()) {
+				sort(MatchObjects11Dist.begin(), MatchObjects11Dist.end());
+
+
+				//set memory blocks into order
+				for (WORD i = 0; i < MatchObjects11Dist.size(); i++) {
+					for (WORD ii = 0; ii < MatchObjects111Dist.size(); ii++) {
+						if (MatchObjects11Dist[i] == MatchObjects111Dist[ii]) {
+							//should add closest memory block @ 0(first)
+							FinalObjectsMBlock.push_back(MatchObjectsMBlock[ii]);
+							FinalObjectsTimer.push_back(MatchObjectsTimer[ii]);
+						}
+					}
+				}
+			}
+
+		BOOLEAN failed = FALSE;
+		if (!FinalObjectsMBlock.empty()) {
+			for (WORD i = 0; i < FinalObjectsMBlock.size(); i++) {
+				//try every block some (random) amount of times before moving onto next block
+				for (WORD loop = 0; loop < rand() % 8 + 1; loop++) {
+					DWORD64 holder = VirtPRead64(FinalObjectsMBlock[i] + alloff88);
+					DWORD part = VirtPReadDword(holder + alloff66);
+					if (FinalObjectsTimer[i] != part) {
+						WPOINT screenp = { VirtPReadWord(FinalObjectsMBlock[i] + dooffxm), VirtPReadWord(FinalObjectsMBlock[i] + dooffym) };
+						screenp.y = resyy - screenp.y;
+						if (ScreenFilter(screenp)) {
+							screenp.x = screenp.x - 7 + xy.x+ resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
+							if (action == 0) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseLeftClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 1) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									MouseRightClick(50, 2000);
+									return TRUE;
+								}
+							}
+							if (action == 2) {
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+								RandomSleep2(25, 550, 3000);
+								if (SideTextEq(sidetext)) {
+									return TRUE;
+								}
+							}
+							if (action == 3) {
+								return TRUE;
+							}
+						}
+					}
+				}
+			}
+			//try minimap
+			if (usemap == TRUE) {
+				WPOINT screenp = ToMapFFPOINT2({ VirtPReadWord(FinalObjectsMBlock[0] + dooff11)*512.f,VirtPReadWord(FinalObjectsMBlock[0] + dooff22)*512.f });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4 + mxy.x; screenp.y = screenp.y - 4 + mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
 					RandomSleep2(25, 550, 3000);
 					MouseLeftClick(50, 2000);
 					return TRUE;
@@ -7601,15 +8324,17 @@ FFPOINT ReadCompass() {
 //finds and reads varpbits
 VB FindVarBit(WORD id)
 {
-	SettingTest();
-	if (!SettingsId.empty()) {
-		for (DWORD i = 0; i < SettingsId.size(); i++) {
-			if (SettingsId[i] == id) {
-				return{ SettingsState[i], SettingsAddr[i] };
+	if (LocalPlayer!=NULL) {
+		SettingTest();
+		if (!SettingsId.empty()) {
+			for (DWORD i = 0; i < SettingsId.size(); i++) {
+				if (SettingsId[i] == id) {
+					return{ SettingsState[i], SettingsAddr[i] };
+				}
 			}
 		}
+		cout << dec << "Did not find varps:" << id << endl;
 	}
-	cout << dec << "Did not find varps:" << id << endl;
 	return{ 0 ,0 };
 }
 
@@ -7617,8 +8342,8 @@ VB FindVarBit(WORD id)
 string FindSideText() {
 	string s;
 	if (LocalPlayer != NULL) {
-		//whole screen box
-		if (InterfCheck(UpTextTempMemoryLoc, 1477, 815, 0xffff, 813)) {
+		//whole screen box, using shortcut
+		if (InterfCheck(UpTextTempMemoryLoc, 1477, 823, 0xffff, 821)) {
 			//cout << hex << UpTextTempMemoryLoc << endl;
 			if (UpTextTempMemoryLoc != NULL) {
 				DWORD64 hold = VirtPRead64(UpTextTempMemoryLoc + 0x228) + 0x8;
@@ -7637,7 +8362,7 @@ string FindSideText() {
 			cout << "Looking Up Text" << endl;
 			//keeps crashing here without wait
 			Sleep(100);
-			UpTextTempMemoryLoc = Locateinterface(1477, 815, 0xffff, 813);
+			UpTextTempMemoryLoc = Locateinterface(1477, 823, 0xffff, 821);
 		}
 	}
 	return s;
@@ -7651,7 +8376,7 @@ BOOLEAN SideTextEq(string text) {
 				return TRUE;
 			}}
 	return FALSE;
-}
+} 
 
 //tileclick
 BOOLEAN ClickTile2_(POINT p)  {
@@ -7871,7 +8596,7 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 					if (ScreenFilter(screenp)) {
 						screenp.x = screenp.x - 7 + resxl;
 						screenp.y = screenp.y - 7 + resyt;
-						MoveMouse2(screenp.x, screenp.y, 14, 20);
+						MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 						RandomSleep2(25, 550, 3000);
 						MouseLeftClick(50, 2000);
 						return TRUE;
@@ -7884,7 +8609,7 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 					WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(NPCLOCK + npcoff11) - 256.f,VirtPReadFloat(NPCLOCK + npcoff22) - 256.f });
 					if (screenp.x != 0 && screenp.y != 0) {
 						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-						MoveMouse2(screenp.x, screenp.y, 4, 4);
+						MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
 						RandomSleep2(25, 550, 3000);
 						MouseLeftClick(50, 2000);
 						return TRUE;
@@ -7899,7 +8624,7 @@ BOOLEAN NPCFocusClick_(BYTE mapdistance) {
 
 //finds x and y for npc
 //max distance from player
-BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory,INT cormx, INT cormy, BOOLEAN usemap, BYTE action, string sidetext) {
+BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, POINT xy, POINT mxy, BOOLEAN usemap, BYTE action, string sidetext) {
 
 	vector<FLOAT> MatchNPCsDist;
 	vector<FLOAT> MatchNPCsDist2;
@@ -7960,20 +8685,17 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory,INT co
 		if (!MatchNPCsMBlock2.empty()) {
 				for (DWORD i = 0; i < MatchNPCsMBlock2.size(); i++) {
 					//try every block some (random) amount of times before moving onto next block
-					for (DWORD loop = 0; loop < rand() % 5+1; loop++) {
+					for (DWORD loop = 0; loop < rand() % 10+1; loop++) {
 					DWORD64 holder = VirtPRead64(MatchNPCsMBlock2[i] + alloff88);
 					DWORD part = VirtPReadDword(holder + alloff66);
 					if (MatchNPCsTimer2[i] != part) {
-						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + npcoffxm), VirtPReadWord(MatchNPCsMBlock2[i] + npcoffym) };
-						
+						WPOINT screenp = { VirtPReadWord(MatchNPCsMBlock2[i] + npcoffxm), VirtPReadWord(MatchNPCsMBlock2[i] + npcoffym) };						
 						screenp.y = resyy - screenp.y;
 						if (ScreenFilter(screenp)) {
-							screenp.x = screenp.x - 7 + corx + resxl;
-							screenp.y = screenp.y - 7 + cory + resyt;
+							screenp.x = screenp.x - 7 + xy.x + resxl;
+							screenp.y = screenp.y - 7 + xy.y + resyt;
 							if (action == 0) {
-								cout << dec << screenp.x << endl;
-								cout << dec << screenp.y << endl;
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseLeftClick(50,2000);
@@ -7981,7 +8703,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory,INT co
 								}
 							}
 							if (action == 1) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									MouseRightClick(50, 2000);
@@ -7989,7 +8711,7 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory,INT co
 								}
 							}
 							if (action == 2) {
-								MoveMouse2(screenp.x, screenp.y, 14, 20);
+								MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
 								RandomSleep2(25, 550, 3000);
 								if (SideTextEq(sidetext)) {
 									runsNPC = 0;
@@ -8003,13 +8725,12 @@ BOOLEAN FindNPCss(vector<DWORD> npc, BYTE maxdistance, INT corx, INT cory,INT co
 					}
 				}
 				//try minimap
-				if (i < MatchNPCsMBlock2.size()) { failed = TRUE; }
 			}
-			if (failed == TRUE && usemap==TRUE) {
+			if (usemap==TRUE) {
 				WPOINT screenp = ToMapFFPOINT2({ VirtPReadFloat(MatchNPCsMBlock2[0] + npcoff11) - 256.f,VirtPReadFloat(MatchNPCsMBlock2[0] + npcoff22) - 256.f });
 				if (screenp.x != 0 && screenp.y != 0) {
-					screenp.x = screenp.x - 4+cormx; screenp.y = screenp.y - 4+cormy;
-					MoveMouse2(screenp.x, screenp.y, 4, 4);
+					screenp.x = screenp.x - 4+mxy.x; screenp.y = screenp.y - 4+mxy.y;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
 					RandomSleep2(25, 550, 3000);
 					MouseLeftClick(50, 2000);
 					return TRUE;
@@ -8078,10 +8799,15 @@ int MouseInception() {
 	}
 	//it seems after we have incepted we need to keep fowarding mouse actions trough here
 	while (interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
+		//we don't need to loop it for fake events
+		if (mouse && keyboard) {
+			cout << "all needed devices found, breaking loop" << endl;
+			break;
+		}
 		if (interception_is_mouse2(device)) {
 			if (!mouse) {
 				mouse = device;
-				cout << "mouse found:" << mouse << endl;
+				ccout(0xa, "mouse intercepted:");
 				wchar_t hardware_id[500];
 				size_t length = interception_get_hardware_id(context, mouse, hardware_id, sizeof(hardware_id));
 				if (length > 0 && length < sizeof(hardware_id))
@@ -8128,7 +8854,11 @@ int MouseInception() {
 			InterceptionKeyStroke &kstroke = *(InterceptionKeyStroke *)&stroke;
 			if (!keyboard) {
 				keyboard = device;
-				cout << "keyboard found" << endl;
+				ccout(0xa,"keyboard intercepted:");
+				wchar_t hardware_id[500];
+				size_t length = interception_get_hardware_id(context, keyboard, hardware_id, sizeof(hardware_id));
+				if (length > 0 && length < sizeof(hardware_id))
+					wcout << hardware_id << endl;
 			}
 			//cout << dec << kstroke.code << endl;
 			interception_send(context, keyboard, &stroke, 1);
@@ -8424,47 +9154,53 @@ BOOLEAN PInArea(WORD xc,WORD rangex,WORD yc,WORD rangey,BYTE floorz){
 	return FALSE;
 }
 
-//make a move to keep player in
+//make a move to keep player logged in
 VOID PIdle1() {
-	DWORD Dice = RandomGener2(20);
+	//starts at 1
+	DWORD Dice = RandomGener2(4)-1;
 	QWPOINT q = GetRSCorners();
 	WORD resy = GetRsResolution2().y;
 	WORD plxm;
 	WORD plym;
 	switch (Dice) {
+	case 0:
+		//hover inventory
+		cout << "0" << endl;
+		InvRandom_(2);
+		break;
 	case 1:
 		//focus on player
 		cout << "1" << endl;
 		plxm = VirtPReadWord(LocalPlayer + npcoffxm);
 		plym = resy-VirtPReadWord(LocalPlayer + npcoffym);
 		if (RandomGener2(100)<91) {
-			MoveMouse2(q.left + plxm, q.top + plym, 5, 5);
+			MoveMouse2(q.left + plxm, q.top + plym, 5, 5, TRUE);
 		}
 		else {
 			if (RandomGener2(100) < 87) {
-				MoveMouse2(q.left + plxm, q.top + plym, 5, 5);
+				MoveMouse2(q.left + plxm, q.top + plym, 5, 5, TRUE);
 				RandomSleep2(25, 3550, 15000);
 				MouseRightClick(50, 2000);
 				RandomSleep2(25, 3550, 15000);
 				DWORD Dice2 =RandomGener2(100) < 77;
 				if (Dice2 >= 70 && Dice2 <= 100) {
-					MoveMouse2(q.left + RandomGener2(240), q.top + RandomGener2(q.bottom - q.top), 0, 0);
+					MoveMouse2(q.left + RandomGener2(240), q.top + RandomGener2(q.bottom - q.top), 0, 0, TRUE);
 				}
 				if (Dice2 >= 40 && Dice2 < 70) {
-					MoveMouse2(q.right - RandomGener2(240), q.top + RandomGener2(q.bottom - q.top), 0, 0);
+					MoveMouse2(q.right - RandomGener2(240), q.top + RandomGener2(q.bottom - q.top), 0, 0, TRUE);
 				}
 				if (Dice2 >= 10 && Dice2 < 40) {
-					MoveMouse2(q.right - q.left, q.top + RandomGener2(((q.bottom - q.top)/2)-10), 0, 0);
+					MoveMouse2(q.right - q.left, q.top + RandomGener2(((q.bottom - q.top)/2)-10), 0, 0, TRUE);
 				}
 				if (Dice2 >= 8 && Dice2 < 10) {
-					MoveMouse2(q.left + RandomGener2(q.right - q.left), q.top + RandomGener2(q.bottom - q.top), 0, 0);
+					MoveMouse2(q.left + RandomGener2(q.right - q.left), q.top + RandomGener2(q.bottom - q.top), 0, 0, TRUE);
 				}
 				if (Dice2 >= 0 && Dice2 < 8) {
-					MoveMouse2(1 + RandomGener2(screen_width2), 1 + RandomGener2(screen_height2), 0, 0);
+					MoveMouse2(1 + RandomGener2(screen_width2), 1 + RandomGener2(screen_height2), 0, 0, TRUE);
 				}
 			}
 			else {
-				MoveMouse2(q.left + plxm, q.top + plym, 5, 5);
+				MoveMouse2(q.left + plxm, q.top + plym, 5, 5, TRUE);
 				RandomSleep2(25, 2550, 16000);
 				MouseLeftClick(50, 2000);
 			}
@@ -8474,12 +9210,12 @@ VOID PIdle1() {
 	case 2:		
 		//move mouse around at random
 		cout << "2" << endl;
-		MoveMouse2(q.left, q.top, RandomGener2(q.right - q.left), RandomGener2(q.bottom - q.top));
+		MoveMouse2(q.left, q.top, RandomGener2(q.right - q.left), RandomGener2(q.bottom - q.top), TRUE);
 		break;
 	default:
 		//move mouse around at random
 		cout << "default" << endl;
-		MoveMouse2(q.left+RandomGener2(q.right-q.left),q.top+ RandomGener2(q.bottom-q.top),0,0);
+		MoveMouse2(q.left+RandomGener2(q.right-q.left),q.top+ RandomGener2(q.bottom-q.top),0,0, TRUE);
 		break;
 	}
 }
@@ -9201,21 +9937,100 @@ POINT TToMap(POINT spot) {
 	return{ 0,0 };
 }
 
-//finds inv stuff
-WPOINT InvFindItem(DWORD item) {
+//finds non empty slots
+WPOINT InvFindNotEmpty() {
+	vector<DWORD>items;
+	vector<BYTE>slots;
+	vector<BYTE>slotstrack;
+	vector<WORD>xs;
+	vector<WORD>ys;
+	////////////////////////////////
+	vector<DWORD>items2;
+	vector<BYTE>slots2;
+	vector<WORD>xs2;
+	vector<WORD>ys2;
+	BYTE action;
+
 
 	FilterInventory();
-	if (!InvId.empty()) {		
-		for (DWORD i = 0; i < InvId.size(); i++) {
-			if (InvId[i] == item) {
-				return{ Invx[i],Invy[i]};
+	if (!InvId.empty()) {
+		for (BYTE i = 0; i < InvId.size(); i++) {
+			if (InvId[i] > 0) {
+				items.push_back(InvId[i]);
+				slots.push_back(InvSlot2[i]);
+				slotstrack.push_back(InvSlot2[i]);
+				xs.push_back(Invx[i]);
+				ys.push_back(Invy[i]);
+			}
+		}
+
+		sort(slots.begin(), slots.end());
+		//set memory blocks into order by dist and dist2
+		for (BYTE i = 0; i < slots.size(); i++) {
+			for (BYTE ii = 0; ii < slotstrack.size(); ii++) {
+				if (slots[i] == slotstrack[ii]) {
+					//smallest front
+					items2.push_back(items[ii]);
+					slots2.push_back(slotstrack[ii]);
+					xs2.push_back(xs[ii]);
+					ys2.push_back(ys[ii]);
+					break;
+				}
+			}
+		}
+		//cout << "invitemsfound:" << slots2.size() << endl;
+
+		if (!xs2.empty()) {
+			action = RandomGener2(2) - 1;
+			switch (action) {
+				//random one
+			case 0:
+				//cout << xs2.size() << endl;
+				if (xs2.size() > 1) {
+					BYTE randrr = RandomGener2(xs2.size());
+					//cout << +randrr << endl;
+					return{ xs2[0 + randrr],ys2[0 + randrr] };
+				}
+				else {
+					return{ xs2[0],ys2[0] };
+				}
+				break;
+				//first four
+			case 1:
+				//cout << xs2.size() << endl;
+				if (xs2.size() > 3) {
+					BYTE randrr = RandomGener2(4) - 1;
+					return{ xs2[0 + randrr],ys2[0 + randrr] };
+				}
+				else {
+					if (xs2.size() > 2) {
+						BYTE randrr = RandomGener2(3) - 1;
+						return{ xs2[0 + randrr],ys2[0 + randrr] };
+					}
+					else {
+						if (xs2.size() > 1) {
+							BYTE randrr = RandomGener2(2) - 1;
+							return{ xs2[0 + randrr],ys2[0 + randrr] };
+						}
+						else {
+							return{ xs2[0],ys2[0] };
+						}
+					}
+				}
+				break;
+				//miss
+			default:
+				cout << "invmiss" << endl;
+				return{ 0,0 };
+				break;
 			}
 		}
 	}
 	return{ 0,0 };
 }
 
-BOOLEAN ClickInv_(DWORD item) {
+//player idle, for random, 0 click, 1 right click, 2 hover
+BOOLEAN InvRandom_(BYTE action) {
 	WORD resyt = rs.top;
 	WORD resxl = rs.left;
 	WORD resyy = GetRsResolution2().y;
@@ -9228,21 +10043,157 @@ BOOLEAN ClickInv_(DWORD item) {
 	}
 	else
 	{
-		WPOINT screenp = InvFindItem(item);
+		WPOINT screenp = InvFindNotEmpty();
 		//cout << resxl << ":" << resyt << endl;
 		if (screenp.x != 0 && screenp.y != 0 && screenp.x < 4000 && screenp.y < 4000) {
-			screenp.x = screenp.x - 7 + resxl; screenp.y = screenp.y - 7 +  resyt;
-			MoveMouse2(screenp.x, screenp.y, 14, 20);
-			RandomSleep2(25, 550, 3000);
-			MouseLeftClick(100,1200);
-			return TRUE;
+			screenp.x = screenp.x - 7 + resxl; screenp.y = screenp.y - 7 + resyt;
+			if (action == 0) {
+				MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+				RandomSleep2(25, 550, 3000);
+				MouseLeftClick(100, 1200);
+				return TRUE;
+			}
+			if (action == 1) {
+				MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+				RandomSleep2(25, 550, 3000);
+				MouseRightClick(100, 1200);
+				return TRUE;
+			}
+			if (action == 2) {
+				MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+				RandomSleep2(25, 550, 3000);
+				return TRUE;
+			}
 		}
 	}
 	return FALSE;
 }
 
-BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
-	FFPOINT p = PlayerCoordFloatRaw();
+//finds inv stuff
+WPOINT InvFindItem(DWORD item, BYTE action) {
+	vector<DWORD>items;
+	vector<BYTE>slots;
+	vector<BYTE>slotstrack;
+	vector<WORD>xs;
+	vector<WORD>ys;
+////////////////////////////////
+	vector<DWORD>items2;
+	vector<BYTE>slots2;
+	vector<WORD>xs2;
+	vector<WORD>ys2;
+
+
+	FilterInventory();
+	if (!InvId.empty()) {		
+		for (BYTE i = 0; i < InvId.size(); i++) {
+			if (InvId[i] == item) {
+				items.push_back(InvId[i]);
+				slots.push_back(InvSlot2[i]);
+				slotstrack.push_back(InvSlot2[i]);
+				xs.push_back(Invx[i]);
+				ys.push_back(Invy[i]);
+			}
+		}
+
+			sort(slots.begin(), slots.end());
+			//set memory blocks into order by dist and dist2
+			for (BYTE i = 0; i < slots.size(); i++) {
+				for (BYTE ii = 0; ii < slotstrack.size(); ii++) {
+					if (slots[i] == slotstrack[ii]) {
+						//smallest front
+						items2.push_back(items[ii]);
+						slots2.push_back(slotstrack[ii]);
+						xs2.push_back(xs[ii]);
+						ys2.push_back(ys[ii]);
+						break;
+					}
+				}
+			}
+			//cout << "invitemsfound:" << slots2.size() << endl;
+			if (!xs2.empty()) {
+				if (action == 99) {
+					action = RandomGener2(5) - 1;
+				}
+				switch (action) {
+					//random one
+				case 0:
+					if (xs2.size() > 1) {
+						//cout << xs2.size() << endl;
+						BYTE randrr = RandomGener2(xs2.size());
+						//cout << +randrr << endl;
+						return{ xs2[0 + randrr],ys2[0 + randrr] };
+					}
+					else {
+						return{ xs2[0],ys2[0] };
+					}
+					break;
+					//take first one from sorted order
+				case 1:
+					return{ xs2[0],ys2[0] };
+					break;
+					//first two
+				case 2:
+					if (xs2.size() > 1) {
+						BYTE randrr = RandomGener2(2) - 1;
+						return{ xs2[0 + randrr],ys2[0 + randrr] };
+					}
+					else {
+						return{ xs2[0],ys2[0] };
+					}
+					break;
+					//first three
+				case 3:
+					if (xs2.size() > 2) {
+						BYTE randrr = RandomGener2(3) - 1;
+						return{ xs2[0 + randrr],ys2[0 + randrr] };
+					}
+					else {
+						if (xs2.size() > 1) {
+							BYTE randrr = RandomGener2(2) - 1;
+							return{ xs2[0 + randrr],ys2[0 + randrr] };
+						}
+						else {
+							return{ xs2[0],ys2[0] };
+						}
+					}
+					break;
+					//first four
+				case 4:
+					if (xs2.size() > 3) {
+						BYTE randrr = RandomGener2(4) - 1;
+						return{ xs2[0 + randrr],ys2[0 + randrr] };
+					}
+					else {
+						if (xs2.size() > 2) {
+							BYTE randrr = RandomGener2(3) - 1;
+							return{ xs2[0 + randrr],ys2[0 + randrr] };
+						}
+						else {
+							if (xs2.size() > 1) {
+								BYTE randrr = RandomGener2(2) - 1;
+								return{ xs2[0 + randrr],ys2[0 + randrr] };
+							}
+							else {
+								return{ xs2[0],ys2[0] };
+							}
+						}
+					}
+					break;
+					//miss
+				default:
+					cout << "invmiss" << endl;
+					return{ 0,0 };
+					break;
+				}
+			}
+	}
+	return{ 0,0 };
+}
+
+BOOLEAN ClickInv_(DWORD item,BYTE action) {
+	WORD resyt = rs.top;
+	WORD resxl = rs.left;
+	WORD resyy = GetRsResolution2().y;
 	POINT c, c2;
 	GetCursorPos(&c);
 	RandomSleep();
@@ -9252,65 +10203,53 @@ BOOLEAN ClickTile_(POINT tile,BYTE minimap) {
 	}
 	else
 	{
-		if (minimap == 0) {
-			if (tile.x != NULL && tile.y != NULL) {
-				FFPOINT tile512 = { tile.x*512.f,tile.y*512.f };
-				FLOAT dist = sqrt(pow(tile512.x - p.x, 2) + pow(tile512.y - p.y, 2));
-				if (dist < (6.f*512.f)) {
-					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
-					if (screenp.x != 0 && screenp.y != 0) {
-						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
-						MoveMouse2(screenp.x, screenp.y, 14, 20);
-						//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-						RandomSleep2(25, 550, 3000);
-						//hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-						//if (hover != hover2) {
-						MouseLeftClick(90,1100);
-						return TRUE;
-						//}
-					}
-				}
-				else
-				{
-					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
-					if (screenp.x != 0 && screenp.y != 0) {
-						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-						MoveMouse2(screenp.x, screenp.y, 4, 4);
-						RandomSleep2(25, 550, 3000);
-						MouseLeftClick(90, 1100);
-						return TRUE;
-					}
+		WPOINT screenp = InvFindItem(item,action);
+		//cout << resxl << ":" << resyt << endl;
+		if (screenp.x != 0 && screenp.y != 0 && screenp.x < 4000 && screenp.y < 4000) {
+			screenp.x = screenp.x - 7 + resxl; screenp.y = screenp.y - 7 +  resyt;
+			MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+			RandomSleep2(25, 550, 3000);
+			MouseLeftClick(100,1200);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+BOOLEAN ClickTile_(POINT tile, BYTE minimap) {
+	FFPOINT p = PlayerCoordFloatRaw();
+	POINT c, c2;
+	GetCursorPos(&c);
+	RandomSleep();
+	GetCursorPos(&c2);
+	cout << tile.x << ":" <<tile.y << endl;
+	if (c.x != c2.x || c.y != c2.y) {
+		Sleep(5000);
+	}
+	else
+	{
+		if (tile.x != NULL && tile.y != NULL) {
+			FFPOINT tile512 = { tile.x*512.f,tile.y*512.f };
+			FLOAT dist = sqrt(pow(tile512.x - p.x, 2) + pow(tile512.y - p.y, 2));
+			if (dist < (minimap*512.f)) {
+				WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
+					MoveMouse2(screenp.x, screenp.y, 14, 20, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(90, 1100);
+					return TRUE;
 				}
 			}
-		}
-		else {
-			if (tile.x != NULL && tile.y != NULL) {
-				FFPOINT tile512 = { tile.x*512.f,tile.y*512.f };
-				FLOAT dist = sqrt(pow(tile512.x - p.x, 2) + pow(tile512.y - p.y, 2));
-				if (dist < (6.f*512.f)) {
-					WPOINT screenp = TToScreen2({ tile512.x, tile512.y });
-					if (screenp.x != 0 && screenp.y != 0 && minimap == 1) {
-						screenp.x = screenp.x - 7; screenp.y = screenp.y - 10;
-						MoveMouse2(screenp.x, screenp.y, 14, 20);
-						//hover = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-						RandomSleep2(25, 550, 3000);
-						//hover2 = VirtPReadDword(MatchNPCsMBlock[i] + npcoff111);
-						//if (hover != hover2) {
-						MouseLeftClick(90, 1100);
-						return TRUE;
-						//}
-					}
-				}
-				else
-				{
-					WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
-					if (screenp.x != 0 && screenp.y != 0 && minimap == 2) {
-						screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
-						MoveMouse2(screenp.x, screenp.y, 4, 4);
-						RandomSleep2(25, 550, 3000);
-						MouseLeftClick(90, 1100);
-						return TRUE;
-					}
+			else
+			{
+				WPOINT screenp = ToMapFFPOINT2({ tile512.x, tile512.y });
+				if (screenp.x != 0 && screenp.y != 0) {
+					screenp.x = screenp.x - 4; screenp.y = screenp.y - 4;
+					MoveMouse2(screenp.x, screenp.y, 4, 4, TRUE);
+					RandomSleep2(25, 550, 3000);
+					MouseLeftClick(90, 1100);
+					return TRUE;
 				}
 			}
 		}
@@ -9534,7 +10473,7 @@ VOID MouseCLRS(POINT cursor, BOOLEAN type) {
 	if (cursor.x != 0 && cursor.y != 0) {
 		cursor.x = cursor.x + rs3.left;
 		cursor.y = cursor.y + rs3.top;
-		MoveMouse2(cursor.x, cursor.y, 10, 10);
+		MoveMouse2(cursor.x, cursor.y, 10, 10, TRUE);
 		if (type) {
 			MouseLeftClick(100, 1200);
 		}
@@ -9557,7 +10496,7 @@ VOID MouseDrag_RS(POINT cursor, POINT cursor2) {
 		cursor.y = cursor.y + rs3.top;
 		cursor2.x = cursor2.x + rs3.left;
 		cursor2.y = cursor2.y + rs3.top;
-		MoveMouse2(cursor.x, cursor.y, 10, 10);
+		MoveMouse2(cursor.x, cursor.y, 10, 10, TRUE);
 		RandomSleep2(25, 550, 3000);
 		mstroke.flags = INTERCEPTION_MOUSE_MOVE_ABSOLUTE;
 		mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
@@ -9565,7 +10504,7 @@ VOID MouseDrag_RS(POINT cursor, POINT cursor2) {
 		mstroke.y = static_cast<int>((0xFFFF * (xyhold2.y)) / screen_height2);
 		interception_send(context, mouse, (InterceptionStroke *)&mstroke, 1);
 		RandomSleep2(100, 2050, 4000);
-		MoveMouse2(cursor2.x, cursor2.y, 10, 10);
+		MoveMouse2(cursor2.x, cursor2.y, 10, 10, FALSE);
 		RandomSleep2(100, 2050, 4000);
 		mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
 		mstroke.x = static_cast<int>((0xFFFF * (xyhold2.x)) / screen_width2);
@@ -9583,7 +10522,7 @@ VOID MouseMove_(POINT cursor) {
 	if (cursor.x != 0 && cursor.y != 0) {
 		cursor.x = cursor.x + rs3.left;
 		cursor.y = cursor.y + rs3.top;
-		MoveMouse2(cursor.x, cursor.y, 10, 10);
+		MoveMouse2(cursor.x, cursor.y, 10, 10, TRUE);
 		RandomSleep2(100, 2050, 4000);
 	}
 }
@@ -9596,7 +10535,7 @@ VOID MouseMove_2(int x, int y, int rx, int ry) {
 	if (x != 0 && y != 0) {
 		x = x +rs3.left;;
 		y = y +rs3.top;
-		MoveMouse2(x, y, 10, 10);
+		MoveMouse2(x, y, 10, 10, TRUE);
 		RandomSleep2(100, 2050, 4000);
 	}
 }
@@ -9705,13 +10644,16 @@ DWORD RandomGener2(DWORD number) {
 
 	void WindMouse2(double xs, double ys, double xe, double ye,
 		double gravity, double wind, double minWait, double maxWait,
-		double maxStep, double targetArea) {
-		if (mouse && CheckRS3()) {
+		double maxStep, double targetArea, BOOLEAN updown) {
 			InterceptionContext context;
 			InterceptionMouseStroke mstroke;
 			context = interception_create_context();
 			mstroke.flags = INTERCEPTION_MOUSE_MOVE_ABSOLUTE;
-			mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+			if (updown){
+				mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_UP;
+			}else{
+				mstroke.state = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN;
+			}
 			double dist, windX = 0.1, windY = 0.1, veloX = 0.1, veloY = 0.1, randomDist, veloMag, step;
 			int oldX, oldY, newX = (int)round(xs), newY = (int)round(ys);
 
@@ -9781,7 +10723,6 @@ DWORD RandomGener2(DWORD number) {
 			xyhold2.x = xyhold2.x + newX;
 			xyhold2.y = xyhold2.y + newY;
 			interception_destroy_context(context);
-		}
 	}
 
 
@@ -9790,17 +10731,19 @@ DWORD RandomGener2(DWORD number) {
 	}
 
 	 //moves mouse around all windows desktop
-	 void MoveMouse2(int x, int y, int rx, int ry) {
-		 if (x>0 && y>0 && x<screen_width2 && y<screen_height2) {
-			 x += RandomGener2(rx);
-			 y += RandomGener2(ry);
+	 void MoveMouse2(int x, int y, int rx, int ry, BOOLEAN updown) {
+		 if (mouse && CheckRS3()) {
+			 if (x > 0 && y > 0 && rx > 0 && ry > 0 && x < screen_width2 && y < screen_height2) {
+				 x += RandomGener2(rx);
+				 y += RandomGener2(ry);
 
-			 double randomSpeed = max((RandomGener(mouseSpeed) / 2.0 + mouseSpeed) / 10.0, 0.1);
-			 WORD xxx = xyhold2.x / RandomGener2(2000);
-			 WORD yyy = xyhold2.y / RandomGener2(2000);
+				 double randomSpeed = max((RandomGener(mouseSpeed) / 2.0 + mouseSpeed) / 10.0, 0.1);
+				 WORD xxx = xyhold2.x / RandomGener2(2000);
+				 WORD yyy = xyhold2.y / RandomGener2(2000);
 
-			 WindMouse2(xxx, yyy, x - xyhold2.x, y - xyhold2.y, 9.0, 3.0, 10.0 / randomSpeed,
-				 15.0 / randomSpeed, 10.0 * randomSpeed, 10.0 * randomSpeed);
+				 WindMouse2(xxx, yyy, x - xyhold2.x, y - xyhold2.y, 9.0, 3.0, 10.0 / randomSpeed,
+					 15.0 / randomSpeed, 10.0 * randomSpeed, 10.0 * randomSpeed, updown);
+			 }
 		 }
 	 }
 
@@ -10560,9 +11503,7 @@ VOID FindRS()
 			//some extra stuff
 			Cpuinit();
 			//////////////////
-			LocateStartAddresses();
-	//	}
-	
+			LocateStartAddresses();	
 }
 
 //checks if process it is attached is still there//there was some talk about how it maybe wrong
@@ -10579,8 +11520,73 @@ BOOLEAN CheckRS3()
 	return FALSE;
 }
 
+//checks if mouse sys file is in place
+BOOLEAN CheckMsys()
+{	
+	if (HProc != NULL) {
+		PWSTR path = NULL;
+		string holder;
+		HRESULT hr = SHGetKnownFolderPath(FOLDERID_System, 0, 0, &path);
+		if (SUCCEEDED(hr)) {			
+			holder = Utils::WstringToUTF8(path);	
+			holder.append("\\drivers\\mouse.sys");			 
+			ifstream inBigArrayfile;
+			inBigArrayfile.open(holder, std::ios::binary | std::ios::in);
+			if (inBigArrayfile) {
+				ccout(0x1a,"mouse file is OK");
+			}
+			else {
+				ccout(0x1c, "mouse file not found");
+			}
+		}
+	}
+	return FALSE;
+}
+
+//checks if keyboard sys file is in place
+BOOLEAN CheckKsys()
+{
+	if (HProc != NULL) {
+		PWSTR path = NULL;
+		string holder;
+		HRESULT hr = SHGetKnownFolderPath(FOLDERID_System, 0, 0, &path);
+		if (SUCCEEDED(hr)) {
+			holder = Utils::WstringToUTF8(path);
+			holder.append("\\drivers\\keyboard.sys");
+			ifstream inBigArrayfile;
+			inBigArrayfile.open(holder, std::ios::binary | std::ios::in);
+			if (inBigArrayfile) {
+				ccout(0x1a, "keyboard file is OK");
+			}
+			else {
+				ccout(0x1c, "keyboard file not found");
+			}
+		}
+	}
+	return FALSE;
+}
+
+//prints color text
+VOID ccout(BYTE color,string tex)
+{
+
+	HANDLE hstdin = GetStdHandle(STD_INPUT_HANDLE);
+	HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	// Remember how things were when we started
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hstdout, &csbi);
+
+	//first bit is background color, second bit is text color
+	SetConsoleTextAttribute(hstdout, color);
+	cout << tex << endl;
+	FlushConsoleInputBuffer(hstdin);
+	//restore previus color
+	SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+}
+
 BOOLEAN FindRS3()
-{    
+{     
 	//HMODULE hMod[200];
 	//DWORD cbNeeded;
 	//TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
@@ -10598,7 +11604,7 @@ BOOLEAN FindRS3()
 
 	if (!procIDs.empty())
 	{    
-		cout << ("NXT Client found!!!" "\n");		
+		ccout(0xa,"NXT Client found!!");		
 		proc.Attach(procIDs.front());
 	    HProc = proc.core().handle();
 		cout << "Handle:" << HProc << "\n";
@@ -10611,7 +11617,7 @@ BOOLEAN FindRS3()
 		RSExeFile = Utils::WstringToUTF8(RS3Maindata->fullPath);
 		cout << "Name:" << Utils::WstringToUTF8(RS3Maindata->name) << " ";
 		cout << "Path:" << RSExeFile << " ";
-		cout << "Base:" << hex << RSExeStart << " ";
+		cout << "Base:" << hex << RSExeStart << " "; 
 		//cout << hex << RS3Maindata->manual << endl;
 		cout <<"Size:"<< hex << RSExeSize << endl;
 		//cout << hex << RS3Maindata->type << endl;
@@ -10669,11 +11675,15 @@ BOOLEAN FindRS3()
         */
 		EnumWindows(FindWindows, 0);
 		EnumChildWindows(WProc, FindWindows2, 0);
-		FindRS();
 		RS3Found = TRUE;
+		if (RS3Found == TRUE && CheckRS3()) {
+			CheckMsys();
+			CheckKsys();
+			FindRS();
+		}
 		return true;
 	}
-	cout << ("Error" "\n");
+	ccout(0xc,"Error, NXT not found");
 	return false;
 }
 
@@ -10684,13 +11694,13 @@ LRESULT CALLBACK MyKeyboardHook(int nCode, WPARAM wParam, LPARAM lParam)
 	{
 		KBDLLHOOKSTRUCT* keyboardHookPointer = (KBDLLHOOKSTRUCT *)lParam; //Cast.
 		
-		//if ((keyboardHookPointer->flags & LLKHF_LOWER_IL_INJECTED) || (keyboardHookPointer->flags & LLKHF_INJECTED))
-		//{
-		//	cout << "kFake \n";
-		//}
-		//else {
-		//	cout << "kHardware \n"; 
-		//}
+		if ((keyboardHookPointer->flags & LLKHF_LOWER_IL_INJECTED) || (keyboardHookPointer->flags & LLKHF_INJECTED))
+		{
+			cout << "kFake \n";
+		}
+		else {
+			cout << "kHardware \n"; 
+		}
 		
 		keyboardHookPointer->dwExtraInfo = 0;
 		keyboardHookPointer->flags &= ~LLKHF_LOWER_IL_INJECTED; //Remove flag.
@@ -10713,7 +11723,7 @@ LRESULT CALLBACK MyMouseHook(int nCode, WPARAM wParam, LPARAM lParam)
 	if (nCode == HC_ACTION)
 	{
 		MSLLHOOKSTRUCT * mouseHookPointer = (MSLLHOOKSTRUCT *)lParam; //Cast.
-		/*
+		
 		if ((mouseHookPointer->flags & LLMHF_INJECTED) || (mouseHookPointer->flags & LLMHF_LOWER_IL_INJECTED))
 		{
 			cout << "mFake \n";
@@ -10721,7 +11731,7 @@ LRESULT CALLBACK MyMouseHook(int nCode, WPARAM wParam, LPARAM lParam)
 		else {
 			cout << "mHardware \n";
 		}
-		*/
+		
 
 		  mouseHookPointer->dwExtraInfo =0;
 		  mouseHookPointer->flags &= ~LLMHF_LOWER_IL_INJECTED; //Remove flag.
@@ -10981,7 +11991,7 @@ VOID StartLoop()
 	{
 		Sleep(1000);
 		FindLP();
-		//CompassCheck();
+		CompassCheck();
 		GetWindowsRes(); 
 	}
 }
@@ -11337,27 +12347,27 @@ int StartGraphicOverlay()
 			//xyhold.x = 0;
 			if (key4) {
 
-				//FilterInventory();
-				//if (!InvSlot2.empty()) {
-				//	for (DWORD i = 0; i < InvSlot2.size(); i++) {
-				//		for (DWORD ii = 0; ii < CNR.size(); ii++) {
-				//			if (InvId[i] == CNR[ii]) {
-				//				ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 10), ImColor(0, 255, 0, 255), (CText[ii]).c_str(), 0, 0.0f, 0);
-				//				FFPOINT p;
-				//				p.x = CCoord[ii].x*512.f;
-				//				p.y = CCoord[ii].y*512.f;
-				//				FFPOINT xy = ToMapFFPOINT({ p.x,p.y });
-				//				ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 4, ImColor(0, 255, 200, 255));
-				//			}
-				//		}
-				//	}
-				//}
+				FilterInventory();
+				if (!InvSlot2.empty()) {
+					for (DWORD i = 0; i < InvSlot2.size(); i++) {
+						for (DWORD ii = 0; ii < CNR.size(); ii++) {
+							if (InvId[i] == CNR[ii]) {
+								ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(10.f, 10), ImColor(0, 255, 0, 255), (CText[ii]).c_str(), 0, 0.0f, 0);
+								FFPOINT p;
+								p.x = CCoord[ii].x*512.f;
+								p.y = CCoord[ii].y*512.f;
+								FFPOINT xy = ToMapFFPOINT({ p.x,p.y });
+								ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 4, ImColor(0, 255, 200, 255));
+							}
+						}
+					}
+				}
 
 
-				QWPOINT q = GetRSCorners();
-				MoveMouse2(q.left+692, q.top+443, 0,0);
-				Sleep(500);
-				MouseRightClick(222, 666);
+				//key4 = FALSE;
+
+				//ScanForLootArray();
+				//FilterForLootArray();
 				//MoveMouse2(22, 110, 0, 0);
 				//Sleep(5000);
 				//MoveMouse2(1880, 22, 0, 0);
@@ -11380,7 +12390,7 @@ int StartGraphicOverlay()
 				//binary_to_compressed_c("C:\\ProggyTiny.ttf", "ProggyTiny", TRUE, TRUE);
 				//ScanTest1();
 				//ScanTest2();
-				key4 = FALSE;	
+				//key4 = FALSE;	
 				//test();
 				//Searchtest(385);
 				//SearchCompass();
@@ -11833,23 +12843,24 @@ int StartGraphicOverlay()
 						//1048 31 ffff 0 log out ask
 						// lootbox open 1622 4 ffff ffff
 						if (GetAsyncKeyState(VK_ADD)) { 							
-							InterfAdd = InterfAdd + 50; 
+							InterfAdd = InterfAdd + 1; 
 							Sleep(200);
 						}
 						if (GetAsyncKeyState(VK_SUBTRACT)) {
-							InterfAdd = InterfAdd - 50; 
+							InterfAdd = InterfAdd - 1; 
 							Sleep(200);
-						}
+						}  
 						if (
-							(InterfID[i] > InterfAdd 
-							&& InterfID[i] < InterfAdd+50
-							)
-							&& InterfID[i] == 131
-							//&& InterfID4[i] == 65535
-						     &&
-							InterfHov[i] == 1
+							//(InterfID2[i] > InterfAdd 
+							//&& InterfID2[i] < InterfAdd+20
+							//)
 							//&&
-							//InterfID2[i] <60
+							 InterfID[i] == 1477
+							//&& InterfID4[i] == 65535
+						    // &&
+							//InterfHov[i] == 1
+							&&
+							(InterfID2[i] == InterfAdd)
 							//&&
 							//InterfTimer[i]!= OtherT
 							//&&
@@ -11894,11 +12905,11 @@ int StartGraphicOverlay()
 				if (!InterfID12.empty()) {
 					for (DWORD i = 0; i < InterfID12.size(); i++) {
 						if (GetAsyncKeyState(VK_ADD)) {
-							InterfAdd = InterfAdd + 50;
+							InterfAdd = InterfAdd + 20;
 							Sleep(200);
 						}
 						if (GetAsyncKeyState(VK_SUBTRACT)) {
-							InterfAdd = InterfAdd - 50;
+							InterfAdd = InterfAdd - 20;
 							Sleep(200);
 						}
 						if (
@@ -11907,11 +12918,13 @@ int StartGraphicOverlay()
 							//InterfAct2[i]==TRUE
 							//
 							//&&
-							(InterfID12[i] > InterfAdd && InterfID12[i] < InterfAdd+50)
-							//InterfID12[i] == 1477
+							//(InterfID12[i] > InterfAdd && InterfID12[i] < InterfAdd+20)
+							InterfID12[i] == 1473
 							//InterfID22[i] == 815
 							//&&
-							//InterfID42[i] == 813
+							//InterfID32[i] == 0
+							//&&
+							//InterfID42[i] == 10
 							) {
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX2[i], InterfY2[i]), ImColor(0, 255, 0, 255), InterName2[i].c_str(), 0, 0.0f, 0);
 							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX2[i]-50.f, InterfY2[i] - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
@@ -11936,139 +12949,6 @@ int StartGraphicOverlay()
 				}
 			}
 
-
-			//Main INTEREFaces test
-			if (GetAsyncKeyState(VK_SHIFT) && !GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_F12)) {
-				if (key12 == TRUE) { key12 = FALSE; Sleep(200); }
-				else { if (key12 == FALSE) { key12 = TRUE; Sleep(200); } }
-			}
-			if (key12) {
-
-				ReadInterfAll();
-				///cout << "ex:" << dec << InterfActive.size() << "\n";
-				///cout << "ex2:" << dec << InterfID.size() << "\n";
-				if (!InterfID.empty()) {
-					for (DWORD i = 0; i < InterfID.size(); i++) {
-						//filter
-						//1477 is based on timer
-						// directly points to other array
-						//DWORD64 placeholder = VirtPRead64(InterfMem[i] + Itimeroff);
-						//timer!!
-						//WORD OtherT = VirtPReadWord(placeholder + Itimeroff2);
-						if (
-							//
-							//InterfID[i] == 1477
-							//dno try to filter some mess out
-							//&&
-							//!(InterfID[i] == 137 && InterfID2[i] == 0 && InterfID3[i] == 0xffff && InterfID4[i] == 5)
-							//covers entire screen!
-							//&&
-							//!(InterfID[i] == 1488 && InterfID2[i] == 0 && InterfID3[i] == 0xffff && InterfID4[i] == 0xffff)
-							//covers entire screen! closes when mouse right menu opens
-							//&&
-							//!(InterfID[i] == 1680 && InterfID2[i] == 0 && InterfID3[i] == 0xffff && InterfID4[i] == 0xffff)
-							//dno
-							//&&
-							//!(InterfID[i] == 1536 && InterfID2[i] == 0 && InterfID3[i] == 0xffff && InterfID4[i] == 0xffff)
-							//covers screen
-							//&&
-							//!(InterfID[i] == 1216 && InterfID2[i] == 1 && InterfID3[i] == 0xffff && InterfID4[i] == 0)
-							//covers screen
-							//&&
-							//!(InterfID[i] == 1482 && InterfID2[i] == 1 && InterfID3[i] == 0xffff && InterfID4[i] == 0xffff)
-							//covers screen
-							//&&
-							//!(InterfID[i] == 1488 && InterfID2[i] == 2 && InterfID3[i] == 0xffff && InterfID4[i] == 0)
-							//dno hover to open
-							//&&
-							//!(InterfID[i] == 1488 && InterfID2[i] == 4 && InterfID3[i] == 0xffff && InterfID4[i] == 0)
-							//dno cons open
-							//&&
-							//!(InterfID[i] == 137 && InterfID2[i] == 24 && InterfID3[i] == 0xffff && InterfID4[i] == 21)
-							//dno cons open
-							//&&
-							//!(InterfID[i] == 137 && InterfID2[i] == 21 && InterfID3[i] == 0xffff && InterfID4[i] == 0)
-							//dno cons open
-							//&&
-							//InterfID[i] != 1433
-							//&&
-							//&&
-							//InterfID[i] == 1370
-							//&&
-							//InterfHov[i]==1
-							//&&
-							//InterfID3[i] == 0xffff
-							//&&
-							//InterfID4[i] == 0xffff
-							//	&&
-							//InterfID2[i] >=0 && InterfID2[i] <10
-							//&&
-							//InterfTimer[i] != OtherT
-							//&&
-							InterfAct[i]==0
-							) {
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i], InterfY[i]), ImColor(0, 255, 0, 255), InterName[i].c_str(), 0, 0.0f, 0);
-							//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i]-50.f, InterfY[i] - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i] + 10.f, InterfY[i] + 20.f), ImColor(0, 255, 0, 255), to_string((InterfID[i])).c_str(), 0, 0.0f, 0);
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i] + 60.f + 10.f, InterfY[i] + 20.f), ImColor(0, 255, 0, 255), to_string((InterfID2[i])).c_str(), 0, 0.0f, 0);
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i] + 90.f + 10.f, InterfY[i] + 20.f), ImColor(0, 255, 0, 255), to_string((InterfID3[i])).c_str(), 0, 0.0f, 0);
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i] + 130.f + 10.f, InterfY[i] + 20.f), ImColor(0, 255, 0, 255), to_string((InterfID4[i])).c_str(), 0, 0.0f, 0);
-							stringstream stream;
-							stream << hex << InterfMem[i];
-							string result(stream.str());
-							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(InterfX[i] + 10.f, InterfY[i] + 30.f), ImColor(0, 255, 0, 255), result.c_str(), 0, 0.0f, 0);
-
-							//
-							ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(InterfX[i], InterfY[i]), 4, ImColor(255, 0, 0, 255));
-							//
-							ImGui::GetWindowDrawList()->AddLine(ImVec2(InterfX[i], InterfY[i]), ImVec2(InterfX[i] + InterfXs11[i], InterfY[i]), ImColor(255, 0, 0, 255), 1.f);
-							ImGui::GetWindowDrawList()->AddLine(ImVec2(InterfX[i] + InterfXs11[i], InterfY[i]), ImVec2(InterfX[i] + InterfXs11[i], InterfY[i] + InterfYs11[i]), ImColor(255, 0, 0, 255), 1.f);
-							ImGui::GetWindowDrawList()->AddLine(ImVec2(InterfX[i], InterfY[i] + InterfYs11[i]), ImVec2(InterfX[i] + InterfXs11[i], InterfY[i] + InterfYs11[i]), ImColor(255, 0, 0, 255), 1.f);
-							ImGui::GetWindowDrawList()->AddLine(ImVec2(InterfX[i], InterfY[i]), ImVec2(InterfX[i], InterfY[i] + InterfYs11[i]), ImColor(255, 0, 0, 255), 1.f);
-						}
-					}
-				}
-			}
-			
-			//minimap npcs
-			if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_F10)) {
-				if (key15 == TRUE) { key15 = FALSE; Sleep(200); }
-				else { if (key15 == FALSE) { key15 = TRUE; Sleep(200); } }
-			}
-			if (key15) {
-				//ReadNPCArray();
-				if (AllObjectBool == FALSE) {
-					AllObjectBool = TRUE;
-					AllObjectCount++;
-					if (AllObjectCount>10) {
-						AllObjectCount = 0;
-						ReadCObjArrays();
-					}
-				}
-				for (DWORD i = 0; i < NPCX.size(); i++) {
-					//for (DWORD i = 0; i < ObjX.size(); i++) {
-
-					//cout <<dec<< "Mousec:" <<"\n";
-					//FFPOINT xy = ToMapFFPOINT({ ObjX[i], ObjY[i] });
-					FFPOINT xy = ToMapFFPOINT({ NPCX[i], NPCY[i] });
-					//cout <<dec<< "Mousec:" << x2 <<":"<< y2 << "\n";
-
-
-					//stringstream stream;
-					//stream << hex << ObjID[i];
-					//	string result(stream.str());
-
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 20.f), ImColor(0, 255, 0, 255), "id:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 20.f), ImColor(0, 255, 0, 255), to_string((PlID[i])).c_str(), 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x - 50.f, xy.y - 10), ImColor(0, 255, 0, 255), "Health:", 0, 0.0f, 0);
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 10.f), ImColor(0, 255, 0, 255), to_string((PlLife[i])).c_str(), 0, 0.0f, 0);
-
-					//ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y - 30.f), ImColor(0, 255, 0, 255), to_string((test777[i])).c_str(), 0, 0.0f, 0);
-					ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
-					ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 255, 0, 255), NPCName[i].c_str(), 0, 0.0f, 0);
-
-				}
-			}
 
 			//minimap players
 			if (GetAsyncKeyState(VK_SHIFT) && !GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_F2)) {
@@ -12225,6 +13105,7 @@ int StartGraphicOverlay()
 								|| ObjectsAction1[i].find("Dismiss") != string::npos
 								|| ObjectsAction1[i].find("Add-") != string::npos
 								|| ObjectsAction1[i].find("Chop-") != string::npos
+								|| ObjectsName[i].find("Locked") != string::npos
 								) {
 								string p = ObjectsName[i];
 								//resize						
@@ -12271,6 +13152,12 @@ int StartGraphicOverlay()
 							ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255));
 							ImGui::GetWindowDrawList()->AddText(ImGui::GetWindowFont(), ImGui::GetWindowFontSize(), ImVec2(xy.x, xy.y), ImColor(0, 0, 255, 255), NPCName[i].c_str(), 0, 0.0f, 0);
 						}
+						if (NPCName[i].find("Gorilla guard") != string::npos) { 
+							FFPOINT xy = ToMapFFPOINT({ NPCX[i], NPCY[i] });
+							ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(255, 0, 0, 255)); };
+						if (NPCName[i].find("Cabbage cauldron") != string::npos) { 
+							FFPOINT xy = ToMapFFPOINT({ NPCX[i], NPCY[i] });
+							ImGui::GetWindowDrawList()->AddCircleFilled(ImVec2(xy.x, xy.y), 2, ImColor(0, 0, 255, 255)); };
 					}
 				}
 				ImGui::PopFont();
@@ -12552,24 +13439,24 @@ BOOLEAN Start(BOOLEAN OverlayB, BYTE level)
 
 		//totally useless
 		//mouse and keyboard software flags
-		//if (!HookinActive && HookB) {
+		//if (!HookinActive) {
 		//	thread t3(StartHookin);
 		//	t3.detach();
 		//}
-
-		//Loop for
-		if (!RefreshLoop) {
-			RefreshLoop = TRUE;
-			thread t4(StartLoop);
-			t4.detach();
+		if (RS3Found == TRUE && CheckRS3()) {
+			//Loop for
+			if (!RefreshLoop) {
+				RefreshLoop = TRUE;
+				thread t4(StartLoop);
+				t4.detach();
+			}
+			//mouse inception
+			if (!HookinActive) {
+				HookinActive = TRUE;
+				thread t5(MouseInception);
+				t5.detach();
+			}
 		}
-		//mouse inception
-		if (!HookinActive) {
-			HookinActive = TRUE;
-			thread t5(MouseInception);
-			t5.detach();
-		}
-
 
 	//return report about success
 	if (RS3Found == TRUE && CheckRS3()) {
@@ -13409,6 +14296,7 @@ VOID LoadItemText() {
 	TextNR.push_back(18326); TextTxt.push_back("Gold wedge key");         Dungvarp.push_back(1874);
 	TextNR.push_back(18328); TextTxt.push_back("Gold shield key");        Dungvarp.push_back(1875);
 	TextNR.push_back(18778); TextTxt.push_back("Starved ancient effigy");
+	TextNR.push_back(18829); TextTxt.push_back("Group gatestone");
 	TextNR.push_back(20667); TextTxt.push_back("Vecna skull");
 	TextNR.push_back(20668); TextTxt.push_back("Vecna skull-N");
 	TextNR.push_back(21621); TextTxt.push_back("Fellstalk seed");
@@ -13576,8 +14464,26 @@ VOID LoadClueScrolls() {
 	//  CNR.push_back(); CText.push_back(""); CCoord.push_back({});
 	//hard
 	
+	CNR.push_back(1307); CText.push_back("Eagles peak->south,south of charm hunting,boxes"); CCoord.push_back({2397,3355});
 	CNR.push_back(1644); CText.push_back("Mort swamp,near fspot");     CCoord.push_back({ 3440,3419 });
-	CNR.push_back(2722); CText.push_back("Varrock sawmill,lumber yard teleport scroll");           CCoord.push_back({ 3309,3503 });
+	CNR.push_back(1851); CText.push_back("Fala->north,ice mountain,oracle,48"); CCoord.push_back({3012,3501});
+	CNR.push_back(2679); CText.push_back("Lumby lode->norh-east"); CCoord.push_back({3247,3244});
+	CNR.push_back(2682); CText.push_back("Al Kharid lode->north"); CCoord.push_back({3291,3202});
+	CNR.push_back(2685); CText.push_back("Varrock lode"); CCoord.push_back({3203,3384});
+	CNR.push_back(2687); CText.push_back("Varrock east bank,upstairs");           CCoord.push_back({3250,3420});
+	CNR.push_back(2689); CText.push_back("GrandEx tele->south-west"); CCoord.push_back({3156,3406});
+	CNR.push_back(2691); CText.push_back("Fala lode->south,upstairs"); CCoord.push_back({2971,3386});
+	CNR.push_back(2692); CText.push_back("Fala lode"); CCoord.push_back({2955,3390});
+	CNR.push_back(2694); CText.push_back("Fala lod->south,other edge of town"); CCoord.push_back({2969,3311});
+	CNR.push_back(2695); CText.push_back("Port Sarim lode,fishin shop crate"); CCoord.push_back({3012,3222});
+	CNR.push_back(2696); CText.push_back("Port Sarim lode->north->barman"); CCoord.push_back({3045,3257});
+	CNR.push_back(2697); CText.push_back("Draynor lode->south,Ned"); CCoord.push_back({3100,3257});
+	CNR.push_back(2700); CText.push_back("Catherby lode"); CCoord.push_back({2828,3457});
+	CNR.push_back(2704); CText.push_back("Slighty nort of Ardy lode"); CCoord.push_back({2645,3338});
+	CNR.push_back(2713); CText.push_back("Varrock lodestone,west of Champions guild");           CCoord.push_back({ 3166,3360 });
+	CNR.push_back(2716); CText.push_back("Run east from Varrock lodestone,small mine");           CCoord.push_back({ 3289,3373 });
+	CNR.push_back(2719); CText.push_back("Fala lode->east,odd stones"); CCoord.push_back({3043,3398});
+	CNR.push_back(2722); CText.push_back("Varrock sawmill,lumber yard teleport scroll");           CCoord.push_back({ 1,1 });
 	CNR.push_back(2733); CText.push_back("level 36 wilderness,canoe or wild volcano->west");           CCoord.push_back({ 3140,3804 });
 	CNR.push_back(2739); CText.push_back("Behind Pirates' hideout,lv56 wild,west from mages bank"); CCoord.push_back({ 3039,3960 });
 	CNR.push_back(2745); CText.push_back("Lv22 Wild,west'Ruins',tele Trollheim->jump down to wild or Dareeyak Teleport");CCoord.push_back({ 2967,3689 });
@@ -13597,8 +14503,24 @@ VOID LoadClueScrolls() {
 	CNR.push_back(2796); CText.push_back("Sir Prysin in varrock castle"); CCoord.push_back({3204,3472});
 	CNR.push_back(2797); CText.push_back("Varrock square,Wilough"); CCoord.push_back({ 3220,3434 });
 	CNR.push_back(2801); CText.push_back("Draynor,close to jail"); CCoord.push_back({3136,3252});
+	CNR.push_back(2813); CText.push_back("North from ardy bank and zoo, near water"); CCoord.push_back({2643,3252});
+	CNR.push_back(2821); CText.push_back("Travely->east,near Lady of lake"); CCoord.push_back({2920,3403});
+	CNR.push_back(2827); CText.push_back("South of Drynor bank"); CCoord.push_back({ 3093,3225 });
+	CNR.push_back(2841); CText.push_back("East from Yanille,small islands,6859"); CCoord.push_back({2677,3087});
 	CNR.push_back(2848); CText.push_back("Hajedy, Karamja cart travel"); CCoord.push_back({ 2778,3210 });
-	CNR.push_back(2827); CText.push_back("South of Drynor bank"); CCoord.push_back({3093,3225});	
+	CNR.push_back(2853); CText.push_back("Gnomeball ref,5096"); CCoord.push_back({2384,3488});
+	CNR.push_back(3493); CText.push_back("To Dwarwen mine, western part"); CCoord.push_back({3000,3798});
+	CNR.push_back(3495); CText.push_back("Port sarim lod, upstairs of food shop"); CCoord.push_back({3016,3205});
+	CNR.push_back(3496); CText.push_back("Port Sarim->Captain Tobias->Talk to"); CCoord.push_back({3027,3218});
+	CNR.push_back(3497); CText.push_back("House with a range and nearest to the partyroom,upstairs");CCoord.push_back({3040,3365});
+	CNR.push_back(3499); CText.push_back("Travely lode,near poh portal"); CCoord.push_back({2886,3449});
+	CNR.push_back(3501); CText.push_back("Al Kharid lode->north"); CCoord.push_back({3308,3206});
+	CNR.push_back(3503); CText.push_back("Burthorpe lode"); CCoord.push_back({2905,3532});
+	CNR.push_back(3510); CText.push_back("Giant shrooms,Tree Gnome stronghold"); CCoord.push_back({ 2460,3505 });
+	CNR.push_back(3513); CText.push_back("Seers lod->north->sinclair->speak to staff(Louisa)"); CCoord.push_back({2736,3579});
+	CNR.push_back(3515); CText.push_back("Varrock castle kitchen,crate"); CCoord.push_back({3224,3492});
+	CNR.push_back(3516); CText.push_back("West of Seersvillage and McGurbor's"); CCoord.push_back({ 2612,3482 });
+	CNR.push_back(3518); CText.push_back("Behind wizard tower"); CCoord.push_back({3102,3134});
 	CNR.push_back(3520); CText.push_back("Behind Yanille smithhouse"); CCoord.push_back({2617,3076});
 	CNR.push_back(3522); CText.push_back("West ardougne, broken house row"); CCoord.push_back({ 2488,3307 });
 	CNR.push_back(3524); CText.push_back("Near castle wars,up to north,goblins Crate"); CCoord.push_back({ 2457,3182 });
@@ -13627,12 +14549,20 @@ VOID LoadClueScrolls() {
 	CNR.push_back(3579); CText.push_back("Entrana,drawers");     CCoord.push_back({2818,3353});
 	CNR.push_back(3580); CText.push_back("Under red spiders eggs,in karamaja vulcano"); CCoord.push_back({ 2832,9586 });
 	CNR.push_back(3582); CText.push_back("In front of slayer tower"); CCoord.push_back({3443,3515});	
+	CNR.push_back(3584); CText.push_back("Mortmyre swamp,near salve side"); CCoord.push_back({3430,3388});
 	CNR.push_back(3586); CText.push_back("Burthorpe,near barracks"); CCoord.push_back({2920,3535});
 	CNR.push_back(3592); CText.push_back("Tree Gnome Stronghold,west,terrorbird pen with bridge"); CCoord.push_back({ 2387,3435 });
+	CNR.push_back(3594); CText.push_back("Tree Gnome stronghold,swamp toads area,north end"); CCoord.push_back({2416,3516});
+	CNR.push_back(3596); CText.push_back("Hobgoblins area near crafting guild"); CCoord.push_back({2906,3293});
 	CNR.push_back(3598); CText.push_back("McGrubor's Wood, west of Seers' Village. Fairy ring code ALS"); CCoord.push_back({ 2658,3488 });
 	CNR.push_back(3599); CText.push_back("TowerOfLife,fairy DJP"); CCoord.push_back({2649,3231});
 	CNR.push_back(3602); CText.push_back("Chemist house in Rimmington"); CCoord.push_back({2923,3209});
+	CNR.push_back(3607); CText.push_back("Burthorpe lod->north-east,Gaius house,kill penda for key."); CCoord.push_back({2921,3577});
+	CNR.push_back(3609); CText.push_back("Canfis clothes shop,crate"); CCoord.push_back({3498,3507});
+	CNR.push_back(3612); CText.push_back("Gnome stronghold->Enter cave->Brimstail"); CCoord.push_back({2403,3419});
 	CNR.push_back(3614); CText.push_back("Ulizius,near Mort swamp gate"); CCoord.push_back({3441,3461});
+	CNR.push_back(3616); CText.push_back("Duel arena,Jaraah"); CCoord.push_back({3335,3235});
+	CNR.push_back(7236); CText.push_back("North crossroad from Fala");           CCoord.push_back({ 2970,3414 });
 	CNR.push_back(7239); CText.push_back("Lv50 wild,3 little vulcanos,west of mage bank");  CCoord.push_back({ 3021,3912 });
 	CNR.push_back(7241); CText.push_back("Front of legends guild");  CCoord.push_back({2723,3338});
 	CNR.push_back(7248); CText.push_back("Bandit camp,general store crate");  CCoord.push_back({3178,2987});
@@ -13654,9 +14584,20 @@ VOID LoadClueScrolls() {
 	CNR.push_back(7290); CText.push_back("Near ZMI-rc entrance,close to altar");  CCoord.push_back({2454,3230});
 	CNR.push_back(7292); CText.push_back("Lighthouse island,near crystal tree");  CCoord.push_back({2579,3597});
 	CNR.push_back(7294); CText.push_back("Between Rellekka and Seers,fairy cjr");  CCoord.push_back({2668,3561});
+	CNR.push_back(7307); CText.push_back("yanille lod->south-east"); CCoord.push_back({2583,2990});
+	CNR.push_back(7309); CText.push_back("DKP"); CCoord.push_back({2896,3119});
 	CNR.push_back(7313); CText.push_back("Near Shattered worlds minigame");  CCoord.push_back({3185,3149});
 	CNR.push_back(7315); CText.push_back("Rellekka,swaying tree");  CCoord.push_back({ 2735,3638 });
 	CNR.push_back(7317); CText.push_back("Karamja,between nature altar and G-wisps");  CCoord.push_back({2875,3046});
+	CNR.push_back(10184); CText.push_back("Draynor lode->north,steellong,ironkite,studdedchaps,hideyhole"); CCoord.push_back({3080,3250});
+	CNR.push_back(10196); CText.push_back("Draynor lod->north,twirl,hideyhole"); CCoord.push_back({3089,3337});
+	CNR.push_back(10202); CText.push_back("Port Sarim lode->west,shrug,hideyhole"); CCoord.push_back({2974,3236});
+	CNR.push_back(10206); CText.push_back("Adry lode->north,topmill,hideyhole"); CCoord.push_back({2633,3388});
+	CNR.push_back(10210); CText.push_back("Burthorpe lode->South,cheer,airtiara,bronze2h,goldammy,hideyhole"); CCoord.push_back({2909,3498});
+	CNR.push_back(10212); CText.push_back("Burthorpe lode->north->games,cheer without items"); CCoord.push_back({2207,4959});
+	CNR.push_back(10224); CText.push_back("Ardycape->monastery->Port Khazard,panic nothing equiped"); CCoord.push_back({2676,3170});
+	CNR.push_back(10226); CText.push_back("Seers->north,leathcowl,ammystr,ironscimmy,hideyhole"); CCoord.push_back({2740,3537});
+	CNR.push_back(10228); CText.push_back("Varrock lode->Exam center,blueflowers,gloves,rubyamulet,clap,hideyhole"); CCoord.push_back({3362,3341});
 	CNR.push_back(10236); CText.push_back("Fishing guild,elemtal shield,blue-d chaps,rune warhammer,raspberry"); CCoord.push_back({ 2585,3422 });
 	CNR.push_back(10238); CText.push_back("Lighthouse top,blue dhide body,vambs,no jewellery,BOW"); CCoord.push_back({ 2512,3640});
 	CNR.push_back(10240); CText.push_back("Panic at middle of haunted woods, no items equiped"); CCoord.push_back({3620,3486});
@@ -13666,7 +14607,8 @@ VOID LoadClueScrolls() {
 	CNR.push_back(10250); CText.push_back("WhiteWolfMountain,mithril platelegs,ring of life,rune hatchet,panic"); CCoord.push_back({ 2846,3496 });
 	CNR.push_back(10252); CText.push_back("Shilo,blowkiss bank,splitbark helm,mud pie,rune plate"); CCoord.push_back({ 2852,2954 });
 	CNR.push_back(10254); CText.push_back("Canifis,dance at center,bow,spiny helmet,mith platelegs,iron 2h"); CCoord.push_back({3493,3488});
-	CNR.push_back(10258); CText.push_back("Barbarian village bridge,mith full helm,steelkite,iron hatchet,twirl,salute"); CCoord.push_back({3113,3418});
+	CNR.push_back(10258); CText.push_back("Barbarian village bridge,mith full helm,steelkite,iron hatchet,twirl,salute,hideyhole"); CCoord.push_back({3113,3418});
+	CNR.push_back(10262); CText.push_back("Castle wars,yawn,shrug,hideyhole"); CCoord.push_back({2443,3089});
 	CNR.push_back(10268); CText.push_back("Yanille bank jump,jig,iron crossbow,adamant helm,snakeskin chaps"); CCoord.push_back({});
 	CNR.push_back(13010); CText.push_back("Keldagrim,sculptor model"); CCoord.push_back({ 2904,10207 });
 	CNR.push_back(13012); CText.push_back("Piscatoris Fishing Colony,Ramara du Croissant"); CCoord.push_back({ 2340,3675 });
@@ -13690,7 +14632,12 @@ VOID LoadClueScrolls() {
 	CNR.push_back(13053); CText.push_back("Limestone mine,small building near the Odd Old Man,lumberyard scroll teleport<-"); CCoord.push_back({ 3356,3507 });
 	CNR.push_back(13058); CText.push_back("Next to the well in Pollnivneach."); CCoord.push_back({3360,2971});
 	CNR.push_back(13063); CText.push_back("Port Sarim->run to south->Mudskipper point,starfish"); CCoord.push_back({3000,3110});
-	CNR.push_back(33269); CText.push_back("Near fishing guild,behind mid willow "); CCoord.push_back({ 2631,3407 });
+	CNR.push_back(13070); CText.push_back("Karamja lod->north-east,cupboard"); CCoord.push_back({2811,3160});
+	CNR.push_back(13076); CText.push_back("Gu'Tanoth market"); CCoord.push_back({2513,3041});
+	CNR.push_back(33265); CText.push_back("Behind lumby fishshop"); CCoord.push_back({ 3192,3258 });
+	CNR.push_back(33266); CText.push_back("Travely lod->east"); CCoord.push_back({2914,3448});
+	CNR.push_back(33268); CText.push_back("Al Kharid lod->east->Citharede abby"); CCoord.push_back({3415,3158});
+	CNR.push_back(33269); CText.push_back("Near fishing guild,behind mid willow"); CCoord.push_back({ 2631,3407 });
 	CNR.push_back(33272); CText.push_back("Travely wheat field,next to travely dung"); CCoord.push_back({ 2895,3398 });
 	CNR.push_back(33275); CText.push_back("Karamja,north from nature RC,nexto divination"); CCoord.push_back({ 2887,3044 });
 	CNR.push_back(33278); CText.push_back("Below Yanille,near sea,near 3 bushes "); CCoord.push_back({ 2602,3062 });
@@ -13699,14 +14646,14 @@ VOID LoadClueScrolls() {
 	//CNR.push_back(33289); CText.push_back("17"); CCoord.push_back({3400,3149});
 
 	//puzzle 13017,helwyr puzzle 13019,troll puzzle 13027,13033,bridge puzzle 13031,13035,2798,3576
-	//easy casket 10219,7237
-	//easy scroll box 19065-19102
+	//easy casket 42001
+	//easy scroll box 19007-19102
 	///////////////////////////////////
 	//medium scroll box 19078-19120
-	//medium casket 7291,7314,7318,10269
+	//medium casket 42002
 	//////////////////////////////////
 	//hard scroll box 18937-19004,33271-33280
-	//hard casket olds 3545,3547 new 42003
+	//hard casket new 42003
 	////////////////////////////////////////////////////////////////////////
 	//puzzle box 19042
 	//scroll box 19041

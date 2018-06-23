@@ -39,9 +39,10 @@
 #include "MD5.h"
 #include <bitset>
 #include "interception.h"
-#include "utils.h""
+#include "utils.h"
 #pragma comment(lib, "interception.lib")
-
+#include <KnownFolders.h>
+#include <shlobj.h>
 
 
 using namespace std;
@@ -166,10 +167,10 @@ BYTE GetFloorLv_2();
 int GetMouseID_();
 FFPOINT TileToMouseTest22(FFPOINT);
 BOOLEAN FindSObj(vector<DWORD>, BYTE);
-WPOINT InvFindItem(DWORD);
+WPOINT InvFindItem(DWORD,BYTE);
 BOOLEAN FindGItemBool_(vector<DWORD>);
-BOOLEAN FindGItem_(vector<DWORD>, BYTE, INT, INT, BYTE, string);
-BOOLEAN FindNPCss(vector<DWORD>,BYTE,INT,INT,INT, INT, BOOLEAN, BYTE, string);
+BOOLEAN FindGItem_(vector<DWORD>, BYTE, POINT, POINT, BOOLEAN, BYTE, string);
+BOOLEAN FindNPCss(vector<DWORD>,BYTE, POINT, POINT, BOOLEAN, BYTE, string);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,DWORD);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT);
 BOOLEAN FindNPCss(vector<DWORD>, BYTE,POINT,DWORD);
@@ -195,8 +196,10 @@ BOOLEAN InvFull();
 BYTE Invfreecount();
 BOOLEAN ReadPlayerMovin();
 //BOOLEAN ClickTile_(POINT);
-BOOLEAN FindAObj(vector<DWORD>, BYTE,INT,INT, INT,INT, BOOLEAN, BYTE, string);
-BOOLEAN FindDObj(vector<DWORD>, BYTE, INT, INT, INT, INT, BOOLEAN,BYTE, string);
+BOOLEAN FindAObj(vector<DWORD>, BYTE, POINT, POINT, BOOLEAN, BYTE, string);
+BOOLEAN FindAObj2(vector<DWORD>, BYTE, POINT, POINT, BOOLEAN, BYTE, string, POINT, POINT, BOOLEAN);
+BOOLEAN FindDObj(vector<DWORD>, BYTE, POINT, POINT, BOOLEAN,BYTE, string);
+BOOLEAN FindDObj2(vector<DWORD>, BYTE, POINT, POINT, BOOLEAN, BYTE, string, POINT, POINT, BOOLEAN);
 POINT MousePos_();
 VOID MouseDrag_RS(POINT, POINT);
 VOID MouseMove_(POINT);
@@ -206,10 +209,10 @@ void WindMouse(double xs, double ys, double xe, double ye,
 	double gravity, double wind, double minWait, double maxWait,
 	double maxStep, double targetArea);
 double Hypot(double dx, double dy);
-void MoveMouse2(int x, int y, int rx, int ry);
+void MoveMouse2(int x, int y, int rx, int ry, BOOLEAN updown); 
 VOID MouseLeftClick(WORD sleep, WORD rand);
 VOID MouseRightClick(WORD sleep, WORD rand);
-BOOLEAN ClickInv_(DWORD);
+BOOLEAN ClickInv_(DWORD,BYTE);
 VOID KeyPress_(char);
 DWORD RandomGener2(DWORD);
 BOOLEAN ClickTile_(POINT, BYTE);
@@ -241,6 +244,11 @@ WORD GetHPMax_();
 VOID PIdle1();
 BOOLEAN PInArea(WORD, WORD, WORD, WORD, BYTE);
 VOID KeyboardPress(char, WORD, WORD);
+BOOLEAN Comp2DObj(DWORD, DWORD, BYTE, BYTE, BYTE, POINT, POINT, BOOLEAN, BYTE, string );
+BOOLEAN CompNonDObj(DWORD, DWORD, BYTE, BYTE, POINT, POINT, BOOLEAN, BYTE, string);
+VOID ccout(BYTE color, string tex);
+BOOLEAN CheckTile_(BYTE, POINT, BOOLEAN);
+BOOLEAN InvRandom_(BYTE action);
 
 
 // File: 'C:\ProggyTiny.ttf' (35656 bytes)

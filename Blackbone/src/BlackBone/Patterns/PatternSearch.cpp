@@ -194,7 +194,7 @@ size_t PatternSearch::SearchRemoteWhole( Process& remote, bool useWildcard, uint
             continue;
 
         // Filter regions
-        if (mbi.State != MEM_COMMIT || mbi.Protect == PAGE_NOACCESS/*|| !(mbi.Protect & PAGE_READWRITE)*/)
+        if (mbi.State != MEM_COMMIT || mbi.Protect == PAGE_NOACCESS || !(mbi.Protect & PAGE_READWRITE))
             continue;
 
         // Reallocate buffer
@@ -246,7 +246,7 @@ size_t PatternSearch::SearchRemoteEx(Process& remote, DWORD64 start, DWORD64 end
 			continue;
 
 		// Filter regions
-		if (mbi.State != MEM_COMMIT || mbi.Protect == PAGE_NOACCESS/*|| !(mbi.Protect & PAGE_READWRITE)*/)
+		if (mbi.State != MEM_COMMIT || mbi.Protect == PAGE_NOACCESS || !(mbi.Protect & PAGE_READWRITE))
 			continue;
 
 		// Reallocate buffer

@@ -46,6 +46,9 @@
     <ClInclude Include="utils.h">
       <Filter>sauce\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>sauce\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -78,5 +81,8 @@
     <ClCompile Include="utils.c">
       <Filter>sauce</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MemoryError.rc" />
   </ItemGroup>
 </Project>
